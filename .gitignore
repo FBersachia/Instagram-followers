@@ -48,4 +48,7 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Scripts with sensitive data
+scripts/
 *.tmp
