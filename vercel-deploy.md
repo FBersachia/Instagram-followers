@@ -2,42 +2,58 @@
 
 This guide provides step-by-step instructions for deploying the Instagram Follower Tracker application to Vercel.
 
+## 📌 Database Migration Note
+
+This project has been **migrated from MySQL to PostgreSQL (Supabase)**. The backend includes a MySQL-compatible adapter layer, so no changes to service files were needed. All database operations use PostgreSQL behind the scenes.
+
 ## Prerequisites
 
-- [x ] Vercel account (https://vercel.com)
-- [ x] GitHub repository with the latest code
-- [ ] MySQL database (PlanetScale, Railway, or other MySQL provider)
+- [x] Vercel account (https://vercel.com)
+- [x] GitHub repository with the latest code
+- [x] PostgreSQL database (Supabase) - **Already configured**
 - [ ] Domain name (optional, for custom domain)
 
 ## 1. Database Setup
 
-### Option A: PlanetScale (Recommended)
+### ✓ Database Already Configured (Supabase PostgreSQL)
 
-- [ ] Create PlanetScale account (https://planetscale.com)
-- [ ] Create new database
-- [ ] Run migrations:
-  ```bash
-  # Connect to PlanetScale database
-  mysql -h <host> -u <username> -p<password> <database>
+The project is already configured with a Supabase PostgreSQL database:
+- **Provider**: Supabase
+- **Host**: `aws-1-sa-east-1.pooler.supabase.com:5432`
+- **Database**: `postgres`
+- **Schema**: All tables already created (whitelist, non_followers, ex_followers, follower_counts)
 
-  # Run all migration files in order
-  source migrations/schema.sql
-  source migrations/add_users_table.sql
-  ```
-- [ ] Note down connection string
+**For production deployment**, you have two options:
 
-### Option B: Railway MySQL
+### Option A: Use Existing Supabase Database (Recommended)
+- [x] Database already set up and running
+- [x] Schema already applied
+- [x] Connection string available in project `.env`
+- [ ] Use the existing `DATABASE_URL` for production deployment
 
-- [ ] Create Railway account (https://railway.app)
-- [ ] Create new MySQL service
-- [ ] Run migrations using the connection details
-- [ ] Note down connection string
+### Option B: Create New Supabase Database for Production
 
-### Option C: Other MySQL Provider
+If you want a separate production database:
 
-- [ ] Set up MySQL database with your provider
-- [ ] Run all migration files
-- [ ] Note down connection string
+1. [ ] Create new Supabase project at https://supabase.com
+2. [ ] Go to SQL Editor in Supabase dashboard
+3. [ ] Run the schema file:
+   ```sql
+   -- Copy contents from database/schema_postgres.sql
+   -- Paste and execute in Supabase SQL Editor
+   ```
+4. [ ] Note down the new connection string from Settings > Database
+5. [ ] Format: `postgres://postgres.[PROJECT_REF]:[PASSWORD]@aws-1-sa-east-1.pooler.supabase.com:5432/postgres`
+
+### Database Architecture
+
+The backend uses a **MySQL-to-PostgreSQL compatibility adapter** (`src/config/database.ts`) that:
+- Converts MySQL placeholders (`?`) to PostgreSQL (`$1, $2, $3...`)
+- Translates `INSERT IGNORE` to `INSERT ... ON CONFLICT DO NOTHING`
+- Maps error codes (PostgreSQL `23505` → MySQL `ER_DUP_ENTRY`)
+- Provides a MySQL-compatible interface for all service layer code
+
+This means **no changes were needed** to the service files when migrating from MySQL to PostgreSQL.
 
 ## 2. Backend API Deployment
 
@@ -91,16 +107,21 @@ This guide provides step-by-step instructions for deploying the Instagram Follow
 
 - [ ] In Vercel project settings, add environment variables:
   ```
-  DB_HOST=<your-database-host>
-  DB_USER=francisco
-  DB_PASSWORD=mce775Mysql
-  DB_NAME=seguidores
-  DB_PORT=3306
+  # PostgreSQL Database (Supabase)
+  DATABASE_URL=postgres://postgres.[PROJECT_REF]:[PASSWORD]@aws-1-sa-east-1.pooler.supabase.com:5432/postgres
+
+  # JWT Configuration
   JWT_SECRET=fbersachia_seguidores_secret_key_2025
   JWT_EXPIRES_IN=7d
+
+  # API Configuration
   NODE_ENV=production
   ENABLE_FILE_LOGGING=false
+  FRONTEND_URL=https://your-frontend.vercel.app
   ```
+
+**Note**: Replace `[PROJECT_REF]` and `[PASSWORD]` with your actual Supabase credentials.
+For the existing development database, use the connection string from your `.env` file.
 
 - [ ] Deploy backend
 - [ ] Note the deployment URL (e.g., `https://your-backend.vercel.app`)
@@ -235,12 +256,14 @@ This guide provides step-by-step instructions for deploying the Instagram Follow
 
 - [ ] Verify all environment variables are set correctly
 - [ ] Ensure JWT_SECRET is strong and unique
-- [ ] Verify database connection uses SSL
+- [ ] Verify database connection uses SSL (automatic with Supabase)
 - [ ] Check CORS configuration allows only your domains
-- [ ] Verify user passwords are hashed in database
+- [ ] Verify user passwords are hashed in database (bcrypt)
 - [ ] Enable HTTPS (automatic on Vercel)
 - [ ] Review Vercel security headers
 - [ ] Set up rate limiting (if needed)
+- [ ] Verify Supabase Row Level Security (RLS) if needed
+- [ ] Review Supabase authentication settings
 
 ## 10. Post-Deployment Tasks
 
@@ -259,14 +282,22 @@ This guide provides step-by-step instructions for deploying the Instagram Follow
 
 **Problem**: API returns 500 errors
 - Check Vercel function logs
-- Verify environment variables are set
-- Check database connection
-- Verify database migrations ran successfully
+- Verify environment variables are set (especially `DATABASE_URL`)
+- Check Supabase database connection
+- Verify database schema was created successfully
+- Check if Supabase project is paused (unpause in dashboard)
 
 **Problem**: Database connection timeout
-- Check database firewall rules
-- Verify connection string format
-- Ensure database is accessible from Vercel IPs
+- Check if Supabase project is active (not paused)
+- Verify `DATABASE_URL` format is correct
+- Ensure SSL is configured (`rejectUnauthorized: false` in pool config)
+- Check Supabase status: https://status.supabase.com
+- Verify connection pooling settings (Supabase allows all IPs by default)
+
+**Problem**: SSL/TLS connection errors
+- Ensure SSL configuration in `database.ts` has `rejectUnauthorized: false`
+- Verify connection string doesn't have conflicting SSL parameters
+- Use the non-pooling connection URL if pooler has issues
 
 ### Frontend Issues
 
@@ -319,12 +350,21 @@ vercel env pull
 
 - [Vercel Documentation](https://vercel.com/docs)
 - [Vercel Node.js Runtime](https://vercel.com/docs/runtimes#official-runtimes/node-js)
-- [PlanetScale Documentation](https://planetscale.com/docs)
-- [Railway Documentation](https://docs.railway.app)
+- [Supabase Documentation](https://supabase.com/docs)
+- [Supabase Database Guide](https://supabase.com/docs/guides/database)
+- [PostgreSQL on Vercel](https://vercel.com/guides/deploying-postgresql-on-vercel)
+- [Node-Postgres (pg) Documentation](https://node-postgres.com/)
 
 ## Support
 
 For deployment issues:
+
+**Vercel:**
 - Check Vercel status: https://www.vercel-status.com/
 - Vercel support: https://vercel.com/support
 - Community: https://github.com/vercel/vercel/discussions
+
+**Supabase:**
+- Check Supabase status: https://status.supabase.com
+- Supabase support: https://supabase.com/support
+- Community: https://github.com/supabase/supabase/discussions

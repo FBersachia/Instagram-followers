@@ -59,17 +59,19 @@ npm run dev
 ```
 
 **Sistema de Base de Datos:**
-- Host: 127.0.0.1:3306
-- Usuario: francisco
-- Base de datos: seguidores
-- Tablas: whitelist, non_followers, ex_followers
+- **PostgreSQL (Supabase)** - Cloud-hosted database ✓
+- Host: aws-1-sa-east-1.pooler.supabase.com:5432
+- Base de datos: postgres
+- Tablas: whitelist, non_followers, ex_followers, follower_counts
+- **Migración MySQL → PostgreSQL**: ✓ Completado (Nov 2025)
 
 ## Tareas Técnicas Pendientes
 
-- [ ] Configurar mocks correctos de mysql2 para tests unitarios
-- [ ] Crear tests de integración con base de datos real
+- [ ] Configurar mocks correctos de pg (PostgreSQL) para tests unitarios
+- [ ] Crear tests de integración con Supabase PostgreSQL
 - [ ] Agregar manejo de errores más robusto en CLI
 - [x] Implementar logging system
+- [x] Migrar de MySQL a PostgreSQL (Supabase)
 
 ## Próximas Funcionalidades (Post-MVP)
 

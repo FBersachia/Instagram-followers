@@ -369,17 +369,17 @@ The API accepts requests from:
 ## Environment Variables
 
 ```env
-# MySQL Database
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_USER=your_user
-DB_PASSWORD=your_password
-DB_NAME=seguidores
+# PostgreSQL Database (Supabase)
+DATABASE_URL=postgres://YOUR_USER:YOUR_PASSWORD@YOUR_HOST:5432/postgres
 
 # API Configuration
 API_PORT=3000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:5173
+
+# JWT Configuration (if authentication is enabled)
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=7d
 ```
 
 ## Architecture

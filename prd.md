@@ -10,7 +10,7 @@ Hasta acá el MVP.
 Luego del MVP quiero mostrarle estadisticas al usuario. Cuantos seguidores tiene, cuantos lo han dejado de seguir, etc. Ha desarrollar a futuro. 
 
 Tecnologia a utilizar:
-- MySQL.
+- PostgreSQL (Supabase) - Cloud-hosted database.
 - NodeJs.
 - Typescript.
 
@@ -21,7 +21,8 @@ Tecnologia a utilizar:
 - **Frontend**: React 18 + TypeScript + Vite
 - **Estilos**: TailwindCSS con componentes personalizados
 - **Routing**: React Router v6
-- **Base de datos**: MySQL con mysql2 (promises)
+- **Base de datos**: PostgreSQL (Supabase) con adaptador MySQL-compatible
+- **Database Driver**: pg (node-postgres) con pool de conexiones
 - **Interfaz**:
   - CLI (Command Line Interface) con readline - ✓ Completado
   - Web Application (React SPA) - ✓ Completado
@@ -37,7 +38,7 @@ Tecnologia a utilizar:
 seguidores/
 ├── src/                         # Backend (Node.js + Express)
 │   ├── config/
-│   │   └── database.ts          # Configuración de MySQL connection pool
+│   │   └── database.ts          # Configuración de PostgreSQL connection pool (Supabase)
 │   ├── services/
 │   │   ├── jsonParser.ts        # Parse y extracción de usernames de JSON Instagram
 │   │   ├── whitelist.ts         # CRUD para whitelist
@@ -105,7 +106,7 @@ seguidores/
 │   ├── tsconfig.json
 │   └── package.json
 ├── database/
-│   └── schema.sql               # Schema de MySQL con 3 tablas e índices
+│   └── schema.sql               # Schema de PostgreSQL con 4 tablas e índices
 ├── migrations/
 │   └── add_follower_counts.sql  # Migration para tabla follower_counts
 ├── examples/
@@ -153,16 +154,24 @@ Este archivo se puede obtener desde Instagram:
 Ver `examples/usersNotFollowingBack.json` para un ejemplo completo.
 
 ### Base de Datos:
+**PostgreSQL (Supabase)** - Cloud-hosted database con las siguientes tablas:
+
 Tablas implementadas con índices para performance:
 1. **whitelist**: usuarios excluidos del análisis (celebridades, etc.)
-   - id (PK), username (UNIQUE), created_at
+   - id (SERIAL PRIMARY KEY), username (UNIQUE), created_at (TIMESTAMP)
 2. **non_followers**: usuarios que no siguen de vuelta
-   - id (PK), username (UNIQUE), created_at
+   - id (SERIAL PRIMARY KEY), username (UNIQUE), created_at (TIMESTAMP)
 3. **ex_followers**: usuarios que dejaron de seguir
-   - id (PK), username (UNIQUE), unfollowed_at
+   - id (SERIAL PRIMARY KEY), username (UNIQUE), unfollowed_at (TIMESTAMP)
 4. **follower_counts**: seguimiento histórico del conteo de seguidores
-   - id (PK), count (INT), recorded_at (DATETIME), created_at (DATETIME)
+   - id (SERIAL PRIMARY KEY), count (INTEGER), recorded_at (TIMESTAMP), created_at (TIMESTAMP)
    - Índice en recorded_at para queries eficientes
+
+**Migración de MySQL a PostgreSQL**: ✓ Completado
+- Adaptador de compatibilidad MySQL-to-PostgreSQL implementado
+- Conversión automática de placeholders (`?` → `$1, $2...`)
+- Conversión de sintaxis (`INSERT IGNORE` → `INSERT ... ON CONFLICT DO NOTHING`)
+- Sin cambios necesarios en la capa de servicios gracias al adaptador
 
 ### REST API Endpoints:
 Base URL: `http://localhost:3000/api`
@@ -320,21 +329,225 @@ Para correr el proyecto completo en desarrollo:
    ```
    La aplicación web estará disponible en http://localhost:5173
 
-3. **Base de datos MySQL** debe estar corriendo:
-   - Host: 127.0.0.1:3306
-   - Usuario: francisco
-   - Base de datos: seguidores
+3. **Base de datos PostgreSQL (Supabase)** configurada:
+   - Host: aws-1-sa-east-1.pooler.supabase.com:5432
+   - Base de datos: postgres
+   - Conexión: Via `DATABASE_URL` en `.env`
+   - SSL: Configurado automáticamente
+
+---
 
 ### Próximos Pasos (Features Avanzadas):
-- ✓ Dashboard visual (web interface) - COMPLETADO
-- ✓ Seguimiento histórico de seguidores - COMPLETADO
-- ✓ Gráficos de evolución temporal (line charts, pie charts) - COMPLETADO
-- ✓ Exportación de datos a CSV/JSON - COMPLETADO
+
+#### ✅ Completado:
+- ✓ Dashboard visual (web interface)
+- ✓ Seguimiento histórico de seguidores
+- ✓ Gráficos de evolución temporal (line charts, pie charts)
+- ✓ Exportación de datos a CSV/JSON
+- ✓ Filtrado por fechas en ex-followers
+- ✓ Búsqueda en tiempo real en todas las tablas
+- ✓ Tablas paginadas y ordenables
+- ✓ Selección múltiple y bulk actions
+- ✓ Toast notifications para feedback
+- ✓ Modales de confirmación
+- ✓ Empty states elegantes
+- ✓ Diseño responsive con TailwindCSS
+
+#### 🔄 En Roadmap:
 - [ ] Análisis de growth rate y tendencias
 - [ ] Exportación a Excel (.xlsx) y PDF
 - [ ] Comparación entre períodos de tiempo
 - [ ] Sistema de notas por usuario
 - [ ] Sistema de categorías/tags
 - [ ] Modo dark/light
-- [ ] Notificaciones push
-- [ ] Sincronización automática con Instagram API 
+- [ ] Notificaciones push/email
+- [ ] Sincronización automática con Instagram API
+- [ ] Autenticación y multi-usuario
+- [ ] API documentation con Swagger/OpenAPI
+- [ ] Tests E2E con Cypress/Playwright
+- [ ] Mobile app (React Native)
+- [ ] Scheduled reports
+
+---
+
+### Arquitectura de la Aplicación:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    FRONTEND (React)                      │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Components (Button, Table, Modal, Charts, etc.)  │  │
+│  └───────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Pages (Dashboard, Upload, Whitelist, etc.)       │  │
+│  └───────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Services (apiService.ts - Axios HTTP Client)     │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           │ HTTP/REST
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│              BACKEND (Node.js + Express)                 │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Routes (7 routers for different resources)       │  │
+│  └───────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Controllers (Request/Response handling)          │  │
+│  └───────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Services (Business logic + DB operations)        │  │
+│  └───────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Middleware (Error handling, CORS)                │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           │ SQL
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│         DATABASE (PostgreSQL - Supabase Cloud)           │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Tables: whitelist, non_followers, ex_followers,  │  │
+│  │          follower_counts                          │  │
+│  └───────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Indexes for performance optimization             │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Flujo de Datos Típico:
+
+1. **Upload JSON**:
+   - Usuario arrastra archivo JSON en UploadPage
+   - FileUpload component valida y envía a backend
+   - Backend parsea JSON y extrae usernames
+   - Respuesta muestra usuarios en tabla paginada
+
+2. **Add to Whitelist**:
+   - Usuario selecciona usuarios en UploadPage o WhitelistPage
+   - Frontend envía POST request a `/api/whitelist/bulk`
+   - Backend inserta usuarios con `ON CONFLICT DO NOTHING`
+   - Toast notification confirma operación
+
+3. **Insert to Non-Followers**:
+   - Usuario selecciona usuarios y click "Insert to Non-Followers"
+   - Frontend envía POST request a `/api/non-followers`
+   - Backend filtra automáticamente usuarios en whitelist
+   - Inserta restantes en tabla non_followers
+   - Toast muestra cantidad insertada
+
+4. **Move to Ex-Followers**:
+   - Usuario selecciona usuarios en NonFollowersPage
+   - Frontend envía POST request a `/api/ex-followers/bulk`
+   - Backend ejecuta transacción:
+     - DELETE de non_followers
+     - INSERT a ex_followers
+   - Ambas tablas se actualizan atómicamente
+
+5. **View Statistics & Charts**:
+   - DashboardPage carga stats via `/api/stats`
+   - Line chart carga follower history via `/api/follower-counts?limit=30`
+   - Pie chart calcula distribución de usuarios
+   - Usuario puede exportar datos a CSV/JSON
+
+---
+
+### Tecnologías y Patrones:
+
+**Backend Patterns**:
+- REST API design
+- Controller-Service pattern
+- Database connection pooling
+- Transaction management
+- Error handling middleware
+- CORS configuration
+
+**Frontend Patterns**:
+- Component-based architecture
+- Custom hooks (useToast)
+- Controlled components
+- Pagination & sorting
+- Debounced search
+- Optimistic UI updates
+- Toast notifications for UX
+
+**Database Patterns**:
+- Normalized schema (4 tables)
+- Indexes for query optimization
+- UNIQUE constraints
+- Timestamps for audit trail
+- ON CONFLICT clauses for idempotency
+
+---
+
+### Variables de Entorno:
+
+**Backend (.env)**:
+```env
+DATABASE_URL=postgresql://postgres.PROJECT_ID:PASSWORD@aws-1-sa-east-1.pooler.supabase.com:5432/postgres
+PORT=3000
+```
+
+**Frontend (Vite)**:
+- Proxy configurado en `vite.config.ts` para enviar requests a `http://localhost:3000`
+- No necesita variables de entorno adicionales en desarrollo
+
+---
+
+### Testing:
+
+**Backend Tests (Jest)**:
+- `jsonParser.test.ts` - Parse de JSON Instagram
+- `whitelist.test.ts` - CRUD operations whitelist
+- `nonFollowers.test.ts` - CRUD operations non-followers
+- `exFollowers.test.ts` - CRUD operations ex-followers
+
+**Ejecutar tests**:
+```bash
+npm test                # Run all tests
+npm run test:watch      # Watch mode
+npm run test:coverage   # Coverage report
+```
+
+---
+
+### Deployment Considerations:
+
+**Backend**:
+- Build: `npm run build` (compila TypeScript a JavaScript)
+- Production: `npm run start:api`
+- Environment: Asegurar `DATABASE_URL` y `PORT` en producción
+- CORS: Configurar orígenes permitidos para producción
+
+**Frontend**:
+- Build: `cd frontend && npm run build`
+- Output: `frontend/dist/` (archivos estáticos)
+- Deploy: Netlify, Vercel, CloudFlare Pages, etc.
+- API URL: Actualizar base URL en producción
+
+**Database**:
+- Ya en producción (Supabase)
+- Backups automáticos
+- SSL habilitado
+- Connection pooling configurado
+
+---
+
+### Documentación Adicional:
+
+- **README.md**: Guía de inicio rápido y getting started
+- **setup_complete.md**: Overview del setup y estado del proyecto
+- **todo.md**: Lista de tareas y roadmap
+- **database/schema.sql**: Schema completo de base de datos
+- **examples/usersNotFollowingBack.json**: Ejemplo del formato de Instagram
+
+---
+
+**Última actualización**: 2025-01-13
+**Versión**: 2.0.0 (MVP + Frontend Completo)
+**Estado**: Production Ready

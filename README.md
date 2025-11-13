@@ -11,7 +11,7 @@ Sistema para rastrear y gestionar seguidores de Instagram que no te siguen de vu
 ## Requisitos
 
 - Node.js (v16 o superior) ✓
-- MySQL (v8.0 o superior) ✓ (Configurado: usuario `francisco`, base de datos `seguidores`)
+- PostgreSQL Database (Supabase) ✓ - Cloud-hosted PostgreSQL
 - npm ✓
 
 ## Instalación
@@ -19,8 +19,8 @@ Sistema para rastrear y gestionar seguidores de Instagram que no te siguen de vu
 ### ✓ Ya configurado en este proyecto:
 
 1. ✓ Dependencias instaladas
-2. ✓ Base de datos MySQL configurada (`seguidores`)
-3. ✓ Archivo `.env` configurado con credenciales
+2. ✓ Base de datos PostgreSQL (Supabase) configurada
+3. ✓ Archivo `.env` configurado con credenciales de Supabase
 
 ### Para nueva instalación:
 
@@ -29,20 +29,20 @@ Sistema para rastrear y gestionar seguidores de Instagram que no te siguen de vu
    npm install
    ```
 
-2. **Configurar base de datos:**
+2. **Configurar base de datos (Supabase PostgreSQL):**
    ```bash
-   "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -h 127.0.0.1 -u tu_usuario -p < database/schema.sql
+   # Aplicar schema en Supabase
+   psql "postgres://YOUR_USER:YOUR_PASSWORD@YOUR_HOST:5432/postgres?sslmode=require" -f database/schema_postgres.sql
    ```
 
 3. **Configurar variables de entorno:**
 
-   Copiar `.env.example` a `.env` y editar con tus credenciales:
+   Copiar `.env.example` a `.env` y editar con tus credenciales de Supabase:
    ```
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_USER=tu_usuario
-   DB_PASSWORD=tu_contraseña
-   DB_NAME=seguidores
+   DATABASE_URL=postgres://YOUR_USER:YOUR_PASSWORD@YOUR_HOST:5432/postgres
+   API_PORT=3000
+   NODE_ENV=development
+   FRONTEND_URL=http://localhost:5173
    ```
 
 ## Obtener datos de Instagram
@@ -109,7 +109,9 @@ seguidores/
 
 ### Backend (Completado)
 - **Runtime**: Node.js + TypeScript
-- **Base de datos**: MySQL (mysql2)
+- **Base de datos**: PostgreSQL (Supabase) con adaptador MySQL-compatible
+- **Database Driver**: pg (node-postgres)
+- **API**: Express.js REST API
 - **Testing**: Jest + ts-jest
 - **CLI**: readline (interfaz interactiva)
 
