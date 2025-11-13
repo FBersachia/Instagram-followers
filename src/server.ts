@@ -26,6 +26,7 @@ const app: Application = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'https://followers.fbersachia.com.ar',
+  'https://instagram-followers-76u1.vercel.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
