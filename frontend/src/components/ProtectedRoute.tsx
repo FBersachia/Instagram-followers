@@ -12,7 +12,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const location = useLocation();
 
   if (isLoading) {
-    return <Loading fullscreen text="Loading..." />;
+    return <Loading fullScreen text="Loading..." />;
   }
 
   if (!isAuthenticated) {

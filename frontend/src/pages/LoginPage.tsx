@@ -74,7 +74,7 @@ const LoginPage: React.FC = () => {
           <Button
             type="submit"
             className="w-full"
-            isLoading={isLoading}
+            loading={isLoading}
             disabled={isLoading || !username || !password}
           >
             <LogIn className="w-4 h-4 mr-2" />

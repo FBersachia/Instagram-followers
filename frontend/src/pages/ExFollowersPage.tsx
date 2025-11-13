@@ -85,8 +85,8 @@ export const ExFollowersPage = () => {
   const sortedUsers = useMemo(() => {
     const sorted = [...dateFilteredUsers];
     sorted.sort((a, b) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
+      let aValue: string | number = a[sortField];
+      let bValue: string | number = b[sortField];
 
       if (sortField === 'unfollowed_at') {
         aValue = new Date(aValue).getTime();

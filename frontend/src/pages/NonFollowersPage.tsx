@@ -13,7 +13,7 @@ import {
 import { nonFollowersService, exFollowersService } from '../services/apiService';
 import { NonFollower } from '../types/api';
 import { useToast } from '../hooks/useToast';
-import { Users, UserMinus, Trash2, ArrowRight } from 'lucide-react';
+import { Users, ArrowRight } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -62,8 +62,8 @@ export const NonFollowersPage = () => {
   const sortedUsers = useMemo(() => {
     const sorted = [...filteredUsers];
     sorted.sort((a, b) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
+      let aValue: string | number = a[sortField];
+      let bValue: string | number = b[sortField];
 
       if (sortField === 'created_at') {
         aValue = new Date(aValue).getTime();

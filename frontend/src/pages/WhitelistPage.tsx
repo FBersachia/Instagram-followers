@@ -179,12 +179,10 @@ export const WhitelistPage = () => {
             icon={<Shield className="h-12 w-12 text-gray-400" />}
             title="No whitelisted users"
             description="Add users to whitelist to exclude them from non-followers analysis"
-            action={
-              <Button onClick={() => setShowAddModal(true)}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add First User
-              </Button>
-            }
+            action={{
+              label: "Add First User",
+              onClick: () => setShowAddModal(true)
+            }}
           />
         ) : filteredUsers.length === 0 ? (
           <EmptyState

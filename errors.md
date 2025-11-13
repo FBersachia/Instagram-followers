@@ -215,6 +215,186 @@ After pushing changes, redeployed the project in Vercel dashboard.
 
 ---
 
+### 2. TypeScript Compilation Errors in Frontend Deployment
+
+**Date**: 2025-01-13
+**Context**: Frontend deployment to Vercel (React + TypeScript + Vite)
+**Severity**: Critical (blocking deployment)
+
+### Error Message
+```
+20:08:56.681 src/components/ProtectedRoute.tsx(15,21): error TS2322: Type '{ fullscreen: true; text: string; }' is not assignable to type 'IntrinsicAttributes & LoadingProps'.
+20:08:56.682   Property 'fullscreen' does not exist on type 'IntrinsicAttributes & LoadingProps'. Did you mean 'fullScreen'?
+20:08:56.682 src/pages/ExFollowersPage.tsx(92,9): error TS2322: Type 'number' is not assignable to type 'string'.
+20:08:56.682 src/pages/ExFollowersPage.tsx(93,9): error TS2322: Type 'number' is not assignable to type 'string'.
+20:08:56.682 src/pages/LoginPage.tsx(77,13): error TS2322: Type '{ children: (string | Element)[]; type: "submit"; className: string; isLoading: boolean; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & ButtonProps'.
+20:08:56.683   Property 'isLoading' does not exist on type 'IntrinsicAttributes & ButtonProps'. Did you mean 'loading'?
+20:08:56.683 src/pages/NonFollowersPage.tsx(16,17): error TS6133: 'UserMinus' is declared but its value is never read.
+20:08:56.683 src/pages/NonFollowersPage.tsx(16,28): error TS6133: 'Trash2' is declared but its value is never read.
+20:08:56.683 src/pages/NonFollowersPage.tsx(69,9): error TS2322: Type 'number' is not assignable to type 'string'.
+20:08:56.684 src/pages/NonFollowersPage.tsx(70,9): error TS2322: Type 'number' is not assignable to type 'string'.
+20:08:56.684 src/pages/WhitelistPage.tsx(182,13): error TS2739: Type 'ReactElement<any, any>' is missing the following properties from type '{ label: string; onClick: () => void; }': label, onClick
+20:08:56.706 Error: Command "npm run build" exited with 2
+```
+
+### Root Cause
+
+**Multiple TypeScript type mismatches:**
+
+1. **ProtectedRoute.tsx**: Used `fullscreen` prop instead of `fullScreen` (camelCase) for the `Loading` component
+2. **LoginPage.tsx**: Used `isLoading` prop instead of `loading` for the `Button` component
+3. **NonFollowersPage.tsx**: Imported `UserMinus` and `Trash2` icons but never used them
+4. **ExFollowersPage.tsx & NonFollowersPage.tsx**: Type inference issue in sorting logic
+   - Variables `aValue` and `bValue` were inferred as `string` (from field type)
+   - When sorting by date, `getTime()` assigns `number` to these variables
+   - TypeScript flagged this as type mismatch (number not assignable to string)
+5. **WhitelistPage.tsx**: `EmptyState` component's `action` prop expected `{label: string, onClick: () => void}` but received a `ReactElement` (Button component)
+
+### Solution
+
+**Step 1: Fix prop name mismatches**
+
+Fixed `ProtectedRoute.tsx`:
+```diff
+- return <Loading fullscreen text="Loading..." />;
++ return <Loading fullScreen text="Loading..." />;
+```
+
+Fixed `LoginPage.tsx`:
+```diff
+  <Button
+    type="submit"
+    className="w-full"
+-   isLoading={isLoading}
++   loading={isLoading}
+    disabled={isLoading || !username || !password}
+  >
+```
+
+**Step 2: Remove unused imports**
+
+Fixed `NonFollowersPage.tsx`:
+```diff
+- import { Users, UserMinus, Trash2, ArrowRight } from 'lucide-react';
++ import { Users, ArrowRight } from 'lucide-react';
+```
+
+**Step 3: Fix type inference in sorting logic**
+
+Fixed `ExFollowersPage.tsx` and `NonFollowersPage.tsx`:
+```diff
+  const sortedUsers = useMemo(() => {
+    const sorted = [...dateFilteredUsers];
+    sorted.sort((a, b) => {
+-     let aValue = a[sortField];
+-     let bValue = b[sortField];
++     let aValue: string | number = a[sortField];
++     let bValue: string | number = b[sortField];
+
+      if (sortField === 'unfollowed_at') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      }
+```
+
+**Step 4: Fix EmptyState action prop**
+
+Fixed `WhitelistPage.tsx`:
+```diff
+  <EmptyState
+    icon={<Shield className="h-12 w-12 text-gray-400" />}
+    title="No whitelisted users"
+    description="Add users to whitelist to exclude them from non-followers analysis"
+-   action={
+-     <Button onClick={() => setShowAddModal(true)}>
+-       <UserPlus className="h-4 w-4 mr-2" />
+-       Add First User
+-     </Button>
+-   }
++   action={{
++     label: "Add First User",
++     onClick: () => setShowAddModal(true)
++   }}
+  />
+```
+
+**Step 5: Verify build**
+
+```bash
+cd frontend
+npm run build
+```
+
+Result: Build succeeded with no TypeScript errors.
+
+### Prevention
+
+**Best practices to avoid TypeScript errors in production:**
+
+1. **Always run type checks before committing**
+   ```bash
+   npm run build  # Includes tsc type checking
+   # or
+   npm run type-check  # If available
+   ```
+
+2. **Enable strict TypeScript in development**
+   - Ensure `tsconfig.json` has `"strict": true`
+   - Use TypeScript-aware IDE (VSCode with TypeScript extension)
+   - Fix errors in development before they reach deployment
+
+3. **Match prop names with component interfaces**
+   - Check component prop types before using them
+   - Use IDE autocomplete to avoid typos
+   - Example: `Loading` uses `fullScreen`, not `fullscreen`
+
+4. **Explicitly type variables when needed**
+   - When reassigning variables with different types, explicitly declare union types
+   - Example: `let aValue: string | number = ...`
+
+5. **Remove unused imports automatically**
+   - Configure ESLint with `no-unused-vars` rule
+   - Use IDE features to auto-remove unused imports
+   - Run linter before committing
+
+6. **Follow component API contracts**
+   - When a component expects an object, don't pass a ReactElement
+   - Check component prop type definitions
+   - Use TypeScript intellisense to verify prop types
+
+7. **Add pre-commit hooks**
+   ```json
+   // package.json
+   {
+     "husky": {
+       "hooks": {
+         "pre-commit": "npm run type-check && npm run lint"
+       }
+     }
+   }
+   ```
+
+### Related Files
+- `frontend/src/components/ProtectedRoute.tsx`
+- `frontend/src/components/Loading.tsx`
+- `frontend/src/components/Button.tsx`
+- `frontend/src/components/EmptyState.tsx`
+- `frontend/src/pages/LoginPage.tsx`
+- `frontend/src/pages/NonFollowersPage.tsx`
+- `frontend/src/pages/ExFollowersPage.tsx`
+- `frontend/src/pages/WhitelistPage.tsx`
+- `frontend/tsconfig.json`
+
+### References
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [React TypeScript Cheatsheet](https://react-typescript-cheatsheet.netlify.app/)
+- [Vite TypeScript Guide](https://vitejs.dev/guide/features.html#typescript)
+
+### Commits
+- Fix: [To be committed] - Fix TypeScript compilation errors in frontend components
+
+---
+
 ## How to Add New Errors
 
 1. Copy the error template from the top of this file
@@ -229,4 +409,4 @@ After pushing changes, redeployed the project in Vercel dashboard.
 ---
 
 **Last Updated**: 2025-01-13
-**Total Errors Documented**: 1
+**Total Errors Documented**: 2
