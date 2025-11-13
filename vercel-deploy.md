@@ -2,6 +2,17 @@
 
 This guide provides step-by-step instructions for deploying the Instagram Follower Tracker application to Vercel.
 
+## ✅ Deployment Status
+
+**Backend API**: ✓ Successfully deployed and running on Vercel
+- Serverless function configured and working
+- Logger fixed for serverless environment
+- All endpoints responding correctly
+- Health check: ✓ Working
+- Root endpoint: ✓ Working
+
+**Frontend**: Pending deployment (see section 3 below)
+
 ## 📌 Database Migration Note
 
 This project has been **migrated from MySQL to PostgreSQL (Supabase)**. The backend includes a MySQL-compatible adapter layer, so no changes to service files were needed. All database operations use PostgreSQL behind the scenes.
@@ -59,30 +70,52 @@ This means **no changes were needed** to the service files when migrating from M
 
 ### Prepare Backend for Vercel
 
-- [ ] Create `vercel.json` in project root:
+- [x] Create `vercel.json` in project root ✓
   ```json
   {
     "version": 2,
     "builds": [
       {
-        "src": "src/api.ts",
+        "src": "api/index.ts",
         "use": "@vercel/node"
       }
     ],
     "routes": [
       {
         "src": "/api/(.*)",
-        "dest": "src/api.ts"
+        "dest": "api/index.ts"
       },
       {
         "src": "/health",
-        "dest": "src/api.ts"
+        "dest": "api/index.ts"
+      },
+      {
+        "src": "/",
+        "dest": "api/index.ts"
       }
     ]
   }
   ```
 
-- [ ] Update `package.json` to include build script:
+- [x] Create `api/index.ts` as serverless entry point ✓
+  ```typescript
+  // Vercel Serverless Function Entry Point
+  import dotenv from 'dotenv';
+
+  // Load environment variables
+  dotenv.config();
+
+  // Disable file logging for serverless
+  process.env.ENABLE_FILE_LOGGING = 'false';
+
+  // Import app after setting environment
+  import app from '../src/server';
+
+  // Export the Express app for Vercel
+  export default app;
+  ```
+
+- [x] Update `package.json` to include build script ✓
   ```json
   {
     "scripts": {
@@ -92,16 +125,26 @@ This means **no changes were needed** to the service files when migrating from M
   }
   ```
 
+- [x] Create `.vercelignore` to optimize deployment ✓
+  - Excludes tests, frontend, docs, and unnecessary files
+
+- [x] Fix logger for serverless environments ✓
+  - Updated `src/config/logger.ts` to detect serverless platforms
+  - Disabled file logging in Vercel (console logging only)
+  - Prevents filesystem write errors
+
 ### Deploy Backend
 
-- [ ] Go to Vercel Dashboard
-- [ ] Click "Add New Project"
-- [ ] Import GitHub repository
-- [ ] Configure project:
+- [x] Go to Vercel Dashboard ✓
+- [x] Click "Add New Project" ✓
+- [x] Import GitHub repository ✓
+- [x] Configure project: ✓
   - Framework Preset: `Other`
   - Root Directory: `./` (project root)
-  - Build Command: `npm run build`
-  - Output Directory: `dist`
+  - Build Command: `npm run build` or `npm run vercel-build`
+  - Output Directory: Leave empty (serverless functions don't need output dir)
+
+**Note**: Vercel will automatically detect the `vercel.json` configuration and build the serverless function.
 
 ### Set Environment Variables (Backend)
 
@@ -280,12 +323,20 @@ For the existing development database, use the connection string from your `.env
 
 ### Backend Issues
 
+**Problem**: FUNCTION_INVOCATION_FAILED error
+- **Solution**: ✓ Fixed by disabling file logging in serverless environment
+- The logger was trying to write files, which is not allowed in Vercel serverless functions
+- `api/index.ts` now sets `ENABLE_FILE_LOGGING=false` before loading the app
+- `src/config/logger.ts` detects serverless platforms automatically
+- Only console logging is used in Vercel (visible in deployment logs)
+
 **Problem**: API returns 500 errors
-- Check Vercel function logs
+- Check Vercel function logs in deployment dashboard
 - Verify environment variables are set (especially `DATABASE_URL`)
 - Check Supabase database connection
 - Verify database schema was created successfully
 - Check if Supabase project is paused (unpause in dashboard)
+- Ensure all required environment variables are set in Vercel project settings
 
 **Problem**: Database connection timeout
 - Check if Supabase project is active (not paused)
