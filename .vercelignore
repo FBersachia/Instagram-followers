@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+
+# Testing
+tests
+*.test.ts
+*.spec.ts
+coverage
+.nyc_output
+
+# Development
+*.md
+!README.md
+.env
+.env.local
+.env.development
+.env.test
+
+# Logs
+logs
+*.log
+
+# Frontend (deployed separately)
+frontend
+
+# Development files
+.vscode
+.idea
+*.swp
+.DS_Store
+
+# Build artifacts (Vercel handles building)
+dist
+build
+
+# Documentation
+docs
+examples
+
+# CLI files (not needed for API)
+src/index.ts

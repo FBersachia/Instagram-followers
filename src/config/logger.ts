@@ -60,8 +60,11 @@ const transports: winston.transport[] = [
   }),
 ];
 
-// Add file transports only in production or if explicitly enabled
-if (process.env.NODE_ENV === 'production' || process.env.ENABLE_FILE_LOGGING === 'true') {
+// Add file transports only if explicitly enabled (not in serverless environments)
+// Check for Vercel or other serverless environments
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.FUNCTIONS_RUNTIME;
+
+if (!isServerless && process.env.ENABLE_FILE_LOGGING === 'true') {
   // Rotate error logs daily
   transports.push(
     new DailyRotateFile({
@@ -107,8 +110,8 @@ const logger = winston.createLogger({
   exitOnError: false,
 });
 
-// Handle uncaught exceptions and unhandled rejections
-if (process.env.NODE_ENV === 'production' || process.env.ENABLE_FILE_LOGGING === 'true') {
+// Handle uncaught exceptions and unhandled rejections (only in non-serverless environments)
+if (!isServerless && process.env.ENABLE_FILE_LOGGING === 'true') {
   logger.exceptions.handle(
     new DailyRotateFile({
       filename: path.join(logsDir, 'exceptions-%DATE%.log'),
