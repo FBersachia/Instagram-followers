@@ -1,0 +1,10 @@
+# Frontend-specific vercel ignore
+# This overrides the root .vercelignore
+
+# Only ignore these in frontend deployment
+node_modules
+.env.local
+.env.development
+coverage
+*.log
+.DS_Store

@@ -20,9 +20,6 @@ coverage
 logs
 *.log
 
-# Frontend (deployed separately)
-frontend
-
 # Development files
 .vscode
 .idea
