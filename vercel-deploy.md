@@ -160,7 +160,7 @@ This means **no changes were needed** to the service files when migrating from M
   # API Configuration
   NODE_ENV=production
   ENABLE_FILE_LOGGING=false
-  FRONTEND_URL=https://your-frontend.vercel.app
+  FRONTEND_URL=https://followers.fbersachia.com.ar
   ```
 
 **Note**: Replace `[PROJECT_REF]` and `[PASSWORD]` with your actual Supabase credentials.
