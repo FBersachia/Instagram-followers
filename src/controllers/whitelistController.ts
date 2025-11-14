@@ -145,7 +145,7 @@ export const addBulkToWhitelist = async (req: Request, res: Response) => {
 
     for (const username of usernames) {
       try {
-        await addToWhitelist(username);
+        await addToWhitelist(userId, username);
         results.added.push(username);
       } catch (error) {
         results.failed.push({
