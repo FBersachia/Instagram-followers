@@ -132,4 +132,4 @@ Ver `frontend/SETUP_GUIDE.md` para instrucciones de configuración.
 - Estadísticas de seguidores/unfollowers
 - Dashboard web
 - Exportación a CSV/Excel
-- Análisis histórico
+- Análisis histórico# Force redeploy
