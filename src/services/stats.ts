@@ -27,29 +27,33 @@ export interface Stats {
   totalTracked: number;
 }
 
-export async function getStats(): Promise<Stats> {
+export async function getStats(userId: number): Promise<Stats> {
   try {
     // Get whitelist count
     const [whitelistRows] = await pool.execute<CountRow[]>(
-      'SELECT COUNT(*) as count FROM whitelist'
+      'SELECT COUNT(*) as count FROM whitelist WHERE user_id = ?',
+      [userId]
     );
     const whitelistCount = whitelistRows[0]?.count ?? 0;
 
     // Get non-followers count
     const [nonFollowersRows] = await pool.execute<CountRow[]>(
-      'SELECT COUNT(*) as count FROM non_followers'
+      'SELECT COUNT(*) as count FROM non_followers WHERE user_id = ?',
+      [userId]
     );
     const nonFollowersCount = nonFollowersRows[0]?.count ?? 0;
 
     // Get ex-followers count
     const [exFollowersRows] = await pool.execute<CountRow[]>(
-      'SELECT COUNT(*) as count FROM ex_followers'
+      'SELECT COUNT(*) as count FROM ex_followers WHERE user_id = ?',
+      [userId]
     );
     const exFollowersCount = exFollowersRows[0]?.count ?? 0;
 
     // Get recent ex-followers (last 10)
     const [recentExFollowers] = await pool.execute<RecentExFollowerRow[]>(
-      'SELECT username, unfollowed_at FROM ex_followers ORDER BY unfollowed_at DESC LIMIT 10'
+      'SELECT username, unfollowed_at FROM ex_followers WHERE user_id = ? ORDER BY unfollowed_at DESC LIMIT 10',
+      [userId]
     );
 
     return {

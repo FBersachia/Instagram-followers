@@ -12,7 +12,12 @@ import { ApiError } from '../middleware/errorHandler';
  */
 export const getAllExFollowers = async (req: Request, res: Response) => {
   try {
-    const exFollowers = await getExFollowers();
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
+    const exFollowers = await getExFollowers(userId);
 
     res.status(200).json({
       success: true,
@@ -33,13 +38,18 @@ export const getAllExFollowers = async (req: Request, res: Response) => {
  */
 export const addToExFollowers = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { username } = req.body;
 
     if (!username) {
       throw new ApiError(400, 'Username is required');
     }
 
-    await moveToExFollowers(username);
+    await moveToExFollowers(userId, username);
 
     res.status(201).json({
       success: true,
@@ -58,6 +68,11 @@ export const addToExFollowers = async (req: Request, res: Response) => {
  */
 export const addBulkToExFollowers = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { usernames } = req.body;
 
     if (!usernames || !Array.isArray(usernames)) {
@@ -75,7 +90,7 @@ export const addBulkToExFollowers = async (req: Request, res: Response) => {
 
     for (const username of usernames) {
       try {
-        await moveToExFollowers(username);
+        await moveToExFollowers(userId, username);
         results.moved.push(username);
       } catch (error) {
         results.failed.push({
@@ -104,13 +119,18 @@ export const addBulkToExFollowers = async (req: Request, res: Response) => {
  */
 export const deleteExFollower = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { username } = req.params;
 
     if (!username) {
       throw new ApiError(400, 'Username parameter is required');
     }
 
-    await removeExFollower(username);
+    await removeExFollower(userId, username);
 
     res.status(200).json({
       success: true,

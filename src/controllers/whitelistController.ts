@@ -13,7 +13,12 @@ import { ApiError } from '../middleware/errorHandler';
  */
 export const getAllWhitelist = async (req: Request, res: Response) => {
   try {
-    const usernames = await getWhitelist();
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
+    const usernames = await getWhitelist(userId);
 
     res.status(200).json({
       success: true,
@@ -34,9 +39,14 @@ export const getAllWhitelist = async (req: Request, res: Response) => {
  */
 export const addUserToWhitelist = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { username } = req.body;
 
-    await addToWhitelist(username);
+    await addToWhitelist(userId, username);
 
     res.status(201).json({
       success: true,
@@ -57,13 +67,18 @@ export const addUserToWhitelist = async (req: Request, res: Response) => {
  */
 export const removeUserFromWhitelist = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { username } = req.params;
 
     if (!username) {
       throw new ApiError(400, 'Username parameter is required');
     }
 
-    await removeFromWhitelist(username);
+    await removeFromWhitelist(userId, username);
 
     res.status(200).json({
       success: true,
@@ -84,13 +99,18 @@ export const removeUserFromWhitelist = async (req: Request, res: Response) => {
  */
 export const checkWhitelist = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { username } = req.params;
 
     if (!username) {
       throw new ApiError(400, 'Username parameter is required');
     }
 
-    const isWhitelisted = await isInWhitelist(username);
+    const isWhitelisted = await isInWhitelist(userId, username);
 
     res.status(200).json({
       success: true,
@@ -111,6 +131,11 @@ export const checkWhitelist = async (req: Request, res: Response) => {
  */
 export const addBulkToWhitelist = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { usernames } = req.body;
 
     const results = {

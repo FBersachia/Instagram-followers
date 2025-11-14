@@ -7,7 +7,10 @@ interface ExFollowerRow extends RowDataPacket {
   unfollowed_at: Date;
 }
 
-export async function moveToExFollowers(username: string): Promise<void> {
+export async function moveToExFollowers(userId: number, username: string): Promise<void> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
   if (!username || username.trim() === '') {
     throw new Error('Username cannot be empty');
   }
@@ -19,14 +22,14 @@ export async function moveToExFollowers(username: string): Promise<void> {
 
     // Insert into ex_followers
     await connection.execute<ResultSetHeader>(
-      'INSERT IGNORE INTO ex_followers (username) VALUES (?)',
-      [username.trim()]
+      'INSERT IGNORE INTO ex_followers (user_id, username) VALUES (?, ?)',
+      [userId, username.trim()]
     );
 
     // Remove from non_followers if exists
     await connection.execute<ResultSetHeader>(
-      'DELETE FROM non_followers WHERE username = ?',
-      [username.trim()]
+      'DELETE FROM non_followers WHERE user_id = ? AND username = ?',
+      [userId, username.trim()]
     );
 
     await connection.commit();
@@ -38,11 +41,16 @@ export async function moveToExFollowers(username: string): Promise<void> {
   }
 }
 
-export async function getExFollowers(): Promise<
-  Array<{ username: string; unfollowed_at: Date }>
-> {
+export async function getExFollowers(
+  userId: number
+): Promise<Array<{ username: string; unfollowed_at: Date }>> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
+
   const [rows] = await pool.execute<ExFollowerRow[]>(
-    'SELECT username, unfollowed_at FROM ex_followers ORDER BY unfollowed_at DESC'
+    'SELECT username, unfollowed_at FROM ex_followers WHERE user_id = ? ORDER BY unfollowed_at DESC',
+    [userId]
   );
 
   return rows.map((row) => ({
@@ -51,14 +59,17 @@ export async function getExFollowers(): Promise<
   }));
 }
 
-export async function removeExFollower(username: string): Promise<void> {
+export async function removeExFollower(userId: number, username: string): Promise<void> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
   if (!username || username.trim() === '') {
     throw new Error('Username cannot be empty');
   }
 
   const [result] = await pool.execute<ResultSetHeader>(
-    'DELETE FROM ex_followers WHERE username = ?',
-    [username.trim()]
+    'DELETE FROM ex_followers WHERE user_id = ? AND username = ?',
+    [userId, username.trim()]
   );
 
   if (result.affectedRows === 0) {

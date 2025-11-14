@@ -13,7 +13,12 @@ import { ApiError } from '../middleware/errorHandler';
  */
 export const getAllNonFollowers = async (req: Request, res: Response) => {
   try {
-    const nonFollowers = await getNonFollowers();
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
+    const nonFollowers = await getNonFollowers(userId);
 
     res.status(200).json({
       success: true,
@@ -34,6 +39,11 @@ export const getAllNonFollowers = async (req: Request, res: Response) => {
  */
 export const insertNonFollowers = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { usernames } = req.body;
 
     if (!usernames || !Array.isArray(usernames)) {
@@ -44,7 +54,7 @@ export const insertNonFollowers = async (req: Request, res: Response) => {
       throw new ApiError(400, 'usernames array cannot be empty');
     }
 
-    await addNonFollowers(usernames);
+    await addNonFollowers(userId, usernames);
 
     res.status(201).json({
       success: true,
@@ -67,13 +77,18 @@ export const insertNonFollowers = async (req: Request, res: Response) => {
  */
 export const deleteNonFollower = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { username } = req.params;
 
     if (!username) {
       throw new ApiError(400, 'Username parameter is required');
     }
 
-    await removeNonFollower(username);
+    await removeNonFollower(userId, username);
 
     res.status(200).json({
       success: true,
@@ -94,7 +109,12 @@ export const deleteNonFollower = async (req: Request, res: Response) => {
  */
 export const clearAllNonFollowers = async (req: Request, res: Response) => {
   try {
-    await clearNonFollowers();
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
+    await clearNonFollowers(userId);
 
     res.status(200).json({
       success: true,

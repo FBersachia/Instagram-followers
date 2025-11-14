@@ -9,6 +9,8 @@ import {
 jest.mock('../src/config/database');
 
 describe('Non-Followers Service', () => {
+  const userId = 1;
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -16,32 +18,32 @@ describe('Non-Followers Service', () => {
   describe('addNonFollowers', () => {
     it('should add multiple usernames to non-followers list', async () => {
       const usernames = ['user1', 'user2', 'user3'];
-      await expect(addNonFollowers(usernames)).resolves.not.toThrow();
+      await expect(addNonFollowers(userId, usernames)).resolves.not.toThrow();
     });
 
     it('should handle empty array', async () => {
-      await expect(addNonFollowers([])).resolves.not.toThrow();
+      await expect(addNonFollowers(userId, [])).resolves.not.toThrow();
     });
 
     it('should filter out whitelisted users', async () => {
       const usernames = ['user1', 'celebrity_user', 'user2'];
-      await expect(addNonFollowers(usernames)).resolves.not.toThrow();
+      await expect(addNonFollowers(userId, usernames)).resolves.not.toThrow();
     });
 
     it('should handle duplicate usernames', async () => {
       const usernames = ['user1', 'user1', 'user2'];
-      await expect(addNonFollowers(usernames)).resolves.not.toThrow();
+      await expect(addNonFollowers(userId, usernames)).resolves.not.toThrow();
     });
   });
 
   describe('getNonFollowers', () => {
     it('should return array of non-followers', async () => {
-      const nonFollowers = await getNonFollowers();
+      const nonFollowers = await getNonFollowers(userId);
       expect(Array.isArray(nonFollowers)).toBe(true);
     });
 
     it('should return empty array when no non-followers exist', async () => {
-      const nonFollowers = await getNonFollowers();
+      const nonFollowers = await getNonFollowers(userId);
       expect(nonFollowers).toEqual([]);
     });
   });
@@ -49,17 +51,17 @@ describe('Non-Followers Service', () => {
   describe('removeNonFollower', () => {
     it('should remove a username from non-followers list', async () => {
       const username = 'user1';
-      await expect(removeNonFollower(username)).resolves.not.toThrow();
+      await expect(removeNonFollower(userId, username)).resolves.not.toThrow();
     });
 
     it('should throw error for empty username', async () => {
-      await expect(removeNonFollower('')).rejects.toThrow();
+      await expect(removeNonFollower(userId, '')).rejects.toThrow();
     });
   });
 
   describe('clearNonFollowers', () => {
     it('should clear all non-followers', async () => {
-      await expect(clearNonFollowers()).resolves.not.toThrow();
+      await expect(clearNonFollowers(userId)).resolves.not.toThrow();
     });
   });
 });

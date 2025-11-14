@@ -6,15 +6,18 @@ interface WhitelistRow extends RowDataPacket {
   created_at: Date;
 }
 
-export async function addToWhitelist(username: string): Promise<void> {
+export async function addToWhitelist(userId: number, username: string): Promise<void> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
   if (!username || username.trim() === '') {
     throw new Error('Username cannot be empty');
   }
 
   try {
     const [result] = await pool.execute<ResultSetHeader>(
-      'INSERT INTO whitelist (username) VALUES (?)',
-      [username.trim()]
+      'INSERT INTO whitelist (user_id, username) VALUES (?, ?)',
+      [userId, username.trim()]
     );
 
     if (result.affectedRows === 0) {
@@ -28,14 +31,17 @@ export async function addToWhitelist(username: string): Promise<void> {
   }
 }
 
-export async function removeFromWhitelist(username: string): Promise<void> {
+export async function removeFromWhitelist(userId: number, username: string): Promise<void> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
   if (!username || username.trim() === '') {
     throw new Error('Username cannot be empty');
   }
 
   const [result] = await pool.execute<ResultSetHeader>(
-    'DELETE FROM whitelist WHERE username = ?',
-    [username.trim()]
+    'DELETE FROM whitelist WHERE user_id = ? AND username = ?',
+    [userId, username.trim()]
   );
 
   if (result.affectedRows === 0) {
@@ -43,22 +49,29 @@ export async function removeFromWhitelist(username: string): Promise<void> {
   }
 }
 
-export async function getWhitelist(): Promise<string[]> {
+export async function getWhitelist(userId: number): Promise<string[]> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
   const [rows] = await pool.execute<WhitelistRow[]>(
-    'SELECT username FROM whitelist ORDER BY created_at DESC'
+    'SELECT username FROM whitelist WHERE user_id = ? ORDER BY created_at DESC',
+    [userId]
   );
 
   return rows.map((row) => row.username);
 }
 
-export async function isInWhitelist(username: string): Promise<boolean> {
+export async function isInWhitelist(userId: number, username: string): Promise<boolean> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
   if (!username || username.trim() === '') {
     throw new Error('Username cannot be empty');
   }
 
   const [rows] = await pool.execute<WhitelistRow[]>(
-    'SELECT username FROM whitelist WHERE username = ?',
-    [username.trim()]
+    'SELECT username FROM whitelist WHERE user_id = ? AND username = ?',
+    [userId, username.trim()]
   );
 
   return rows.length > 0;

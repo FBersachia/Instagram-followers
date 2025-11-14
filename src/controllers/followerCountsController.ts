@@ -13,8 +13,13 @@ import { ApiError } from '../middleware/errorHandler';
  */
 export const getAllFollowerCounts = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
-    const counts = await getFollowerCounts(limit);
+    const counts = await getFollowerCounts(userId, limit);
 
     res.status(200).json({
       success: true,
@@ -34,7 +39,12 @@ export const getAllFollowerCounts = async (req: Request, res: Response) => {
  */
 export const getLatestCount = async (req: Request, res: Response) => {
   try {
-    const latest = await getLatestFollowerCount();
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
+    const latest = await getLatestFollowerCount(userId);
 
     res.status(200).json({
       success: true,
@@ -52,6 +62,11 @@ export const getLatestCount = async (req: Request, res: Response) => {
  */
 export const addCount = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { count } = req.body;
 
     if (!count && count !== 0) {
@@ -63,7 +78,7 @@ export const addCount = async (req: Request, res: Response) => {
       throw new ApiError(400, 'Count must be a positive number');
     }
 
-    await addFollowerCount(countNum);
+    await addFollowerCount(userId, countNum);
 
     res.status(201).json({
       success: true,
@@ -84,6 +99,11 @@ export const addCount = async (req: Request, res: Response) => {
  */
 export const deleteCount = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     const { id } = req.params;
 
     if (!id) {
@@ -95,7 +115,7 @@ export const deleteCount = async (req: Request, res: Response) => {
       throw new ApiError(400, 'ID must be a number');
     }
 
-    await deleteFollowerCount(idNum);
+    await deleteFollowerCount(userId, idNum);
 
     res.status(200).json({
       success: true,

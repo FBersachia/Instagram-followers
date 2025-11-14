@@ -8,44 +8,61 @@ interface FollowerCountRow extends RowDataPacket {
   created_at: Date;
 }
 
-export async function addFollowerCount(count: number): Promise<void> {
+export async function addFollowerCount(userId: number, count: number): Promise<void> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
   if (!count || count < 0) {
     throw new Error('Count must be a positive number');
   }
 
   try {
     await pool.execute<ResultSetHeader>(
-      'INSERT INTO follower_counts (count) VALUES (?)',
-      [count]
+      'INSERT INTO follower_counts (user_id, count) VALUES (?, ?)',
+      [userId, count]
     );
   } catch (error) {
     throw new Error('Failed to add follower count to database');
   }
 }
 
-export async function getFollowerCounts(limit: number = 100): Promise<FollowerCountRow[]> {
+export async function getFollowerCounts(
+  userId: number,
+  limit: number = 100
+): Promise<FollowerCountRow[]> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
   // Ensure limit is a valid positive integer
   const safeLimit = Math.max(1, Math.min(1000, Math.floor(limit)));
 
   const [rows] = await pool.query<FollowerCountRow[]>(
-    `SELECT id, count, recorded_at, created_at FROM follower_counts ORDER BY recorded_at DESC LIMIT ${safeLimit}`
+    `SELECT id, count, recorded_at, created_at FROM follower_counts WHERE user_id = ? ORDER BY recorded_at DESC LIMIT ${safeLimit}`,
+    [userId]
   );
 
   return rows;
 }
 
-export async function getLatestFollowerCount(): Promise<FollowerCountRow | null> {
+export async function getLatestFollowerCount(userId: number): Promise<FollowerCountRow | null> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
   const [rows] = await pool.execute<FollowerCountRow[]>(
-    'SELECT id, count, recorded_at, created_at FROM follower_counts ORDER BY recorded_at DESC LIMIT 1'
+    'SELECT id, count, recorded_at, created_at FROM follower_counts WHERE user_id = ? ORDER BY recorded_at DESC LIMIT 1',
+    [userId]
   );
 
   return rows.length > 0 ? rows[0]! : null;
 }
 
-export async function deleteFollowerCount(id: number): Promise<void> {
+export async function deleteFollowerCount(userId: number, id: number): Promise<void> {
+  if (!userId || userId <= 0) {
+    throw new Error('Valid userId is required');
+  }
   const [result] = await pool.execute<ResultSetHeader>(
-    'DELETE FROM follower_counts WHERE id = ?',
-    [id]
+    'DELETE FROM follower_counts WHERE user_id = ? AND id = ?',
+    [userId, id]
   );
 
   if (result.affectedRows === 0) {

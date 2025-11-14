@@ -3,16 +3,20 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Determine if we're using local database (localhost)
+const isLocalDatabase = process.env.DATABASE_URL?.includes('localhost') ||
+                        process.env.DATABASE_URL?.includes('127.0.0.1');
+
 const pgPool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
+  // Only use SSL for remote databases (Supabase), not for local
+  ssl: isLocalDatabase ? false : {
     rejectUnauthorized: false
   },
-  // Serverless-optimized settings
-  max: process.env.NODE_ENV === 'production' ? 1 : 10, // Single connection for serverless
+  // Connection pool settings
+  max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
-  allowExitOnIdle: true, // Allow pool to close when idle (important for serverless)
 });
 
 // Test connection on startup
@@ -22,10 +26,7 @@ pgPool.on('connect', () => {
 
 pgPool.on('error', (err) => {
   console.error('Unexpected database error:', err);
-  // Don't exit process in serverless environment
-  if (process.env.NODE_ENV !== 'production') {
-    process.exit(-1);
-  }
+  // Log error but don't exit - let the application handle it
 });
 
 // Helper function to convert MySQL placeholders (?) to PostgreSQL ($1, $2, etc.)

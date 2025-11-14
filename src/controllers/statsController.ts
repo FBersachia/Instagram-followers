@@ -8,7 +8,12 @@ import { ApiError } from '../middleware/errorHandler';
  */
 export const getStatistics = async (req: Request, res: Response) => {
   try {
-    const stats = await getStats();
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
+    const stats = await getStats(userId);
 
     res.status(200).json({
       success: true,

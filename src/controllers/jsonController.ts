@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import { parseInstagramJson, extractUsernames } from '../services/jsonParser';
+import { getWhitelist } from '../services/whitelist';
 import { ApiError } from '../middleware/errorHandler';
 
-// In-memory storage for extracted usernames
+// In-memory storage for extracted usernames per authenticated user
 // In production, this should be stored in Redis or database
-let extractedUsersCache: string[] = [];
+const extractedUsersCache: Record<number, string[]> = {};
 
 /**
  * Upload and parse Instagram JSON file
@@ -12,6 +13,11 @@ let extractedUsersCache: string[] = [];
  */
 export const uploadJson = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
     if (!req.file) {
       throw new ApiError(400, 'No file uploaded');
     }
@@ -29,15 +35,20 @@ export const uploadJson = async (req: Request, res: Response) => {
       throw new ApiError(400, 'No usernames found in the provided JSON file');
     }
 
-    // Store in cache
-    extractedUsersCache = usernames;
+    // Get whitelist for current user and filter out whitelisted users
+    const whitelist = await getWhitelist(userId);
+    const whitelistSet = new Set(whitelist);
+    const filteredUsernames = usernames.filter(username => !whitelistSet.has(username));
+
+    // Store filtered usernames in cache for this user
+    extractedUsersCache[userId] = filteredUsernames;
 
     res.status(200).json({
       success: true,
-      message: `Successfully extracted ${usernames.length} usernames`,
+      message: `Successfully extracted ${filteredUsernames.length} usernames (${usernames.length - filteredUsernames.length} filtered from whitelist)`,
       data: {
-        count: usernames.length,
-        usernames: usernames
+        count: filteredUsernames.length,
+        usernames: filteredUsernames
       }
     });
   } catch (error) {
@@ -56,8 +67,8 @@ export const getExtractedUsers = async (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     data: {
-      count: extractedUsersCache.length,
-      usernames: extractedUsersCache
+      count: req.user?.userId ? extractedUsersCache[req.user.userId]?.length ?? 0 : 0,
+      usernames: req.user?.userId ? extractedUsersCache[req.user.userId] ?? [] : []
     }
   });
 };
@@ -67,7 +78,10 @@ export const getExtractedUsers = async (req: Request, res: Response) => {
  * DELETE /api/users/extracted
  */
 export const clearExtractedUsers = async (req: Request, res: Response) => {
-  extractedUsersCache = [];
+  const userId = req.user?.userId;
+  if (userId) {
+    delete extractedUsersCache[userId];
+  }
   res.status(200).json({
     success: true,
     message: 'Extracted users cache cleared'

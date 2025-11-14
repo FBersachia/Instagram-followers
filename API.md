@@ -7,6 +7,26 @@ REST API backend for Instagram Follower Tracker application.
 - **Base URL**: `http://localhost:3000`
 - **Health Check**: `GET /health`
 
+## Authentication
+
+- Authentication is JWT-based.
+- Public endpoints: `/health`, `/`, and `/api/auth/login`.
+- Protected endpoints (data is scoped per authenticated app user):
+  - `/api/json/*`
+  - `/api/users/*`
+  - `/api/whitelist/*`
+  - `/api/non-followers/*`
+  - `/api/ex-followers/*`
+  - `/api/stats`
+  - `/api/follower-counts/*`
+- For all protected endpoints you must send:
+
+```http
+Authorization: Bearer <your_jwt_token>
+```
+
+Each user only sees and modifies their own whitelist, non-followers, ex-followers, follower counts and statistics.
+
 ## Starting the Server
 
 ```bash
@@ -21,6 +41,8 @@ npm run start:api
 ```
 
 ## API Endpoints
+
+> Note: For brevity, the examples below omit headers. For every protected endpoint listed above, include `Authorization: Bearer <your_jwt_token>`.
 
 ### JSON Upload & Parsing
 

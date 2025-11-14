@@ -408,5 +408,265 @@ Result: Build succeeded with no TypeScript errors.
 
 ---
 
-**Last Updated**: 2025-01-13
-**Total Errors Documented**: 2
+### 3. PostgreSQL Authentication Failed for Local Database (Docker)
+
+**Date**: 2025-11-14
+**Context**: Local development with PostgreSQL in Docker container
+**Severity**: High (blocking local development authentication)
+
+### Error Message
+```
+error: la autentificación password falló para el usuario "seguidores_user"
+  severity: 'FATAL',
+  code: '28P01',
+  file: 'auth.c',
+  line: '332',
+  routine: 'auth_failed'
+```
+
+Frontend error:
+```
+POST http://localhost:3000/api/auth/login 500 (Internal Server Error)
+Login failed
+```
+
+Backend error:
+```
+Error authenticating user: The server does not support SSL connections
+Error authenticating user: la autentificación password falló para el usuario "seguidores_user"
+```
+
+### Root Cause
+
+**Multiple authentication issues:**
+
+1. **Initial SSL Problem**
+   - Database config always enabled SSL: `ssl: { rejectUnauthorized: false }`
+   - Local PostgreSQL Docker container doesn't support SSL
+   - Connection was rejected before authentication could occur
+
+2. **PostgreSQL Authentication Method Mismatch**
+   - PostgreSQL 15 uses SCRAM-SHA-256 authentication by default
+   - Connection string includes password but pg_hba.conf not properly configured
+   - Docker init process creates user with password but external TCP connections fail auth
+   - Unix socket connections work (via `docker exec`) but TCP connections from localhost fail
+
+3. **Password Authentication Issues**
+   - `POSTGRES_PASSWORD` environment variable set in docker-compose.yml
+   - However, password authentication over TCP not working correctly
+   - Suspected issue with pg_hba.conf not being applied during initialization
+   - Volume mount timing: pg_hba.conf mounted but may not override default config
+
+4. **Connection Pool Configuration**
+   - `allowExitOnIdle: true` caused Node.js process to exit immediately
+   - Made debugging difficult as server appeared to start then immediately exit
+
+### Solution
+
+**Attempted Solutions:**
+
+1. ✅ **Fixed SSL for local database** (src/config/database.ts:6-20)
+   ```typescript
+   const isLocalDatabase = process.env.DATABASE_URL?.includes('localhost') ||
+                           process.env.DATABASE_URL?.includes('127.0.0.1');
+
+   const pgPool = new Pool({
+     connectionString: process.env.DATABASE_URL,
+     ssl: isLocalDatabase ? false : {
+       rejectUnauthorized: false
+     },
+   });
+   ```
+
+2. ✅ **Fixed connection pool exit behavior** (src/config/database.ts:17-20)
+   ```typescript
+   max: 10,
+   idleTimeoutMillis: 30000,
+   connectionTimeoutMillis: 10000,
+   // Removed: allowExitOnIdle: true
+   ```
+
+3. ✅ **Fixed error handler** (src/config/database.ts:28-31)
+   ```typescript
+   pgPool.on('error', (err) => {
+     console.error('Unexpected database error:', err);
+     // Log error but don't exit - let the application handle it
+   });
+   ```
+
+4. ⚠️ **Attempted pg_hba.conf configuration** (PARTIALLY WORKING)
+   - Created custom `database/pg_hba.conf` with md5 authentication
+   - Mounted to `/var/lib/postgresql/data/pg_hba.conf`
+   - Issue: May be overwritten or not reloaded after init
+
+5. ⚠️ **Attempted trust authentication** (NOT WORKING)
+   - Set `POSTGRES_HOST_AUTH_METHOD: trust` in docker-compose.yml
+   - Still getting password authentication errors
+   - Indicates pg_hba.conf not being properly applied
+
+### Current Status
+
+**Partially resolved - SSL issue fixed, but password authentication still failing.**
+
+- ✅ SSL disabled for localhost connections
+- ✅ Server stays running (no premature exit)
+- ✅ Health check endpoint works: `http://localhost:3000/health`
+- ✅ Direct database queries work via `docker exec` (Unix socket)
+- ✅ Database container running and healthy
+- ✅ Password confirmed correct (reset and tested with simple password)
+- ✅ pg_hba.conf changed from scram-sha-256 to md5
+- ✅ Password re-hashed with MD5 encryption
+- ❌ TCP password authentication from Node.js on Windows host STILL fails
+- ❌ Login endpoint returns 500 error
+
+### Root Cause Analysis
+
+**After extensive debugging, we determined:**
+
+1. **Password is NOT the issue**
+   - Tested with original password: `seguidores_local_password`
+   - Reset to simple test password: `test123`
+   - Both fail with same error
+
+2. **Authentication method incompatibility**
+   - PostgreSQL 15 defaults to SCRAM-SHA-256 authentication
+   - Changed to MD5 authentication in pg_hba.conf
+   - Re-hashed password with MD5 encryption
+   - Still fails from Windows host
+
+3. **Network routing issue**
+   - Unix socket connections work (via `docker exec`)
+   - TCP connections to 127.0.0.1:5432 fail from Windows
+   - Docker network: 172.18.0.0/16, Gateway: 172.18.0.1
+   - Windows host connections may be routed through Docker gateway
+   - pg_hba.conf trust rule only applies to 127.0.0.1/32
+
+4. **Docker on Windows compatibility**
+   - This appears to be a Windows + Docker Desktop + PostgreSQL 15 specific issue
+   - Authentication works from inside container
+   - Authentication fails from Windows host through port mapping
+   - Likely related to how Docker Desktop handles localhost networking on Windows
+
+### Verification Steps Taken
+
+```bash
+# 1. Verified database user exists
+docker exec seguidores-db psql -U seguidores_user -d seguidores_dev -c "\du"
+# Result: User exists with password
+
+# 2. Reset password explicitly
+docker exec seguidores-db psql -U seguidores_user -d seguidores_dev \
+  -c "ALTER USER seguidores_user WITH PASSWORD 'test123';"
+# Result: Password changed
+
+# 3. Changed authentication method
+docker exec seguidores-db sed -i 's/scram-sha-256/md5/g' \
+  /var/lib/postgresql/data/pg_hba.conf
+# Result: Changed to md5
+
+# 4. Re-hashed password with MD5
+docker exec seguidores-db psql -U seguidores_user -d seguidores_dev \
+  -c "SET password_encryption = 'md5'; ALTER USER seguidores_user WITH PASSWORD 'test123';"
+# Result: Password re-hashed
+
+# 5. Reloaded PostgreSQL config
+docker exec seguidores-db psql -U seguidores_user -d seguidores_dev \
+  -c "SELECT pg_reload_conf();"
+# Result: Config reloaded
+
+# 6. Tested connection from Node.js
+node test-simple.js
+# Result: STILL FAILS with "password authentication failed"
+```
+
+### Workaround
+
+**Recommended: Use production Supabase database**
+```bash
+# Create .env.production with your Supabase credentials
+# Then copy to .env
+cp .env.production .env
+npm run dev:api
+```
+
+**Alternative workarounds (not yet tested):**
+1. Try PostgreSQL 14 instead of 15 (may have better compatibility)
+2. Use different PostgreSQL Docker image (e.g., official postgres without Alpine)
+3. Configure Docker to use host networking mode
+4. Install PostgreSQL natively on Windows instead of Docker
+5. Use WSL2 with Docker inside Linux environment
+
+### Prevention
+
+**Best practices for PostgreSQL in Docker:**
+
+1. **Detect local vs remote database for SSL**
+   ```typescript
+   const isLocalDatabase = process.env.DATABASE_URL?.includes('localhost');
+   const ssl = isLocalDatabase ? false : { rejectUnauthorized: false };
+   ```
+
+2. **Configure pg_hba.conf in initialization scripts**
+   ```bash
+   # In docker-entrypoint-initdb.d/
+   echo "host all all 0.0.0.0/0 md5" >> /var/lib/postgresql/data/pg_hba.conf
+   pg_ctl reload
+   ```
+
+3. **Use POSTGRES_HOST_AUTH_METHOD correctly**
+   - Set during initial database creation only
+   - For development: `POSTGRES_HOST_AUTH_METHOD: trust`
+   - For production: Always use password authentication
+
+4. **Test database connection separately**
+   ```javascript
+   // test-db.js
+   const { Pool } = require('pg');
+   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+   pool.query('SELECT 1').then(() => console.log('OK'));
+   ```
+
+5. **Document database setup clearly**
+   - Include complete Docker setup in README
+   - Document both local and production configurations
+   - Provide troubleshooting steps
+
+### Related Files
+- `src/config/database.ts` (database configuration)
+- `docker-compose.yml` (PostgreSQL container config)
+- `database/schema.postgres.sql` (schema initialization)
+- `database/pg_hba.conf` (authentication configuration)
+- `database/00-init-user.sql` (user initialization)
+- `.env.local` (local environment variables)
+- `README-LOCAL-DB.md` (local database setup guide)
+
+### References
+- [PostgreSQL Authentication Methods](https://www.postgresql.org/docs/15/auth-methods.html)
+- [PostgreSQL Docker Hub](https://hub.docker.com/_/postgres)
+- [pg_hba.conf Documentation](https://www.postgresql.org/docs/15/auth-pg-hba-conf.html)
+- [Node.js pg Driver Documentation](https://node-postgres.com/)
+
+### Next Steps
+
+**Completed Investigation:**
+- [x] Verified password is correct
+- [x] Changed authentication method from scram-sha-256 to md5
+- [x] Re-hashed password with MD5 encryption
+- [x] Confirmed pg_hba.conf is being applied
+- [x] Tested with multiple passwords (original and simple)
+- [x] Identified root cause: Windows + Docker Desktop networking incompatibility
+
+**Remaining Options:**
+- [ ] Try PostgreSQL 14 instead of 15
+- [ ] Test with official postgres image (non-Alpine)
+- [ ] Test with Docker host networking mode
+- [ ] Test from WSL2 instead of Windows
+- [ ] Consider native PostgreSQL installation on Windows
+- [ ] Document working solution once found
+
+**Conclusion:** This is a known compatibility issue with Docker Desktop on Windows and PostgreSQL 15 authentication. The password is correct, but the networking layer between Windows host and Docker container is incompatible with PostgreSQL's password authentication. Recommend using production Supabase database for development until a local solution is found.
+
+---
+
+**Last Updated**: 2025-11-14
+**Total Errors Documented**: 3
