@@ -36,14 +36,24 @@ function convertPlaceholders(sql: string): string {
 
 // Helper function to convert MySQL INSERT IGNORE to PostgreSQL ON CONFLICT
 function convertInsertIgnore(sql: string): string {
-  // Convert INSERT IGNORE to INSERT ... ON CONFLICT DO NOTHING
-  return sql.replace(/INSERT\s+IGNORE\s+INTO/gi, 'INSERT INTO').replace(/VALUES\s*\((.*?)\)/gi, (match) => {
-    // Add ON CONFLICT at the end if it's INSERT IGNORE
-    if (sql.match(/INSERT\s+IGNORE/gi)) {
-      return match + ' ON CONFLICT (username) DO NOTHING';
+  // Check if this is an INSERT IGNORE query
+  if (sql.match(/INSERT\s+IGNORE\s+INTO/gi)) {
+    // Replace INSERT IGNORE with INSERT
+    let converted = sql.replace(/INSERT\s+IGNORE\s+INTO/gi, 'INSERT INTO');
+    // Add ON CONFLICT at the end (after all VALUES)
+    // Only add if not already present
+    if (!converted.match(/ON\s+CONFLICT/gi)) {
+      converted = converted.trim();
+      // Add ON CONFLICT before any trailing semicolon or at the end
+      if (converted.endsWith(';')) {
+        converted = converted.slice(0, -1) + ' ON CONFLICT (username) DO NOTHING;';
+      } else {
+        converted = converted + ' ON CONFLICT (username) DO NOTHING';
+      }
     }
-    return match;
-  });
+    return converted;
+  }
+  return sql;
 }
 
 // MySQL-compatible result interface
