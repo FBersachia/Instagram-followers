@@ -8,9 +8,11 @@ const pgPool = new Pool({
   ssl: {
     rejectUnauthorized: false
   },
-  max: 10,
+  // Serverless-optimized settings
+  max: process.env.NODE_ENV === 'production' ? 1 : 10, // Single connection for serverless
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
+  allowExitOnIdle: true, // Allow pool to close when idle (important for serverless)
 });
 
 // Test connection on startup
@@ -20,7 +22,10 @@ pgPool.on('connect', () => {
 
 pgPool.on('error', (err) => {
   console.error('Unexpected database error:', err);
-  process.exit(-1);
+  // Don't exit process in serverless environment
+  if (process.env.NODE_ENV !== 'production') {
+    process.exit(-1);
+  }
 });
 
 // Helper function to convert MySQL placeholders (?) to PostgreSQL ($1, $2, etc.)

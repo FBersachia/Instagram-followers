@@ -7,7 +7,7 @@ const api = axios.create({
   },
 });
 
-// Request interceptor for adding auth token and debugging
+// Request interceptor for adding auth token
 api.interceptors.request.use(
   (config) => {
     // Add auth token if available
@@ -16,7 +16,6 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log('API Request:', config.method?.toUpperCase(), config.url);
     return config;
   },
   (error) => {
@@ -30,7 +29,6 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );

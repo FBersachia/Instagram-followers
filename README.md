@@ -11,39 +11,63 @@ Sistema para rastrear y gestionar seguidores de Instagram que no te siguen de vu
 ## Requisitos
 
 - Node.js (v16 o superior) ✓
-- PostgreSQL Database (Supabase) ✓ - Cloud-hosted PostgreSQL
+- Docker Desktop (for local development) ✓
+- PostgreSQL Database ✓
+  - **Local Development**: Docker PostgreSQL container
+  - **Production**: Supabase Cloud-hosted PostgreSQL
 - npm ✓
 
 ## Instalación
 
-### ✓ Ya configurado en este proyecto:
-
-1. ✓ Dependencias instaladas
-2. ✓ Base de datos PostgreSQL (Supabase) configurada
-3. ✓ Archivo `.env` configurado con credenciales de Supabase
-
-### Para nueva instalación:
+### Quick Start (Local Development)
 
 1. **Instalar dependencias:**
    ```bash
    npm install
+   cd frontend && npm install
    ```
 
-2. **Configurar base de datos (Supabase PostgreSQL):**
+2. **Iniciar base de datos local:**
    ```bash
-   # Aplicar schema en Supabase
-   psql "postgres://YOUR_USER:YOUR_PASSWORD@YOUR_HOST:5432/postgres?sslmode=require" -f database/schema_postgres.sql
+   # On Windows
+   start-local-db.bat
+
+   # On Linux/Mac
+   ./start-local-db.sh
+
+   # Or manually
+   docker compose up -d
    ```
 
-3. **Configurar variables de entorno:**
+3. **La configuración ya está lista:**
+   - ✓ `.env` configurado para base de datos local
+   - ✓ Schema de base de datos se aplica automáticamente
+   - ✓ Frontend configurado para conectarse al API local
 
-   Copiar `.env.example` a `.env` y editar con tus credenciales de Supabase:
-   ```
-   DATABASE_URL=postgres://YOUR_USER:YOUR_PASSWORD@YOUR_HOST:5432/postgres
-   API_PORT=3000
-   NODE_ENV=development
-   FRONTEND_URL=http://localhost:5173
-   ```
+### Database Setup
+
+**Two database configurations are available:**
+
+1. **Local Development** (Recommended)
+   - Uses Docker PostgreSQL container
+   - Configuration: `.env.local`
+   - See [README-LOCAL-DB.md](README-LOCAL-DB.md) for detailed setup
+
+2. **Production** (Supabase)
+   - Cloud-hosted PostgreSQL
+   - Configuration: `.env.production`
+   - Deployed on Vercel
+
+**To switch between databases:**
+```bash
+# Use local database (development)
+cp .env.local .env
+
+# Use production database (testing)
+cp .env.production .env
+```
+
+⚠️ **Important**: Never commit `.env` or `.env.production` to git!
 
 ## Obtener datos de Instagram
 
