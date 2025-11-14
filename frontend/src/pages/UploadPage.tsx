@@ -245,6 +245,7 @@ export const UploadPage = () => {
             <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
               <li>Go to Instagram and log in to your account</li>
               <li>Open your browser's Developer Console (F12 or Ctrl+Shift+J)</li>
+              <li>Type <code>clear()</code> in the console and press Enter</li>
               <li>Paste the script below and press Enter</li>
               <li>Wait for the script to finish and download the JSON file</li>
               <li>Upload the JSON file below</li>
