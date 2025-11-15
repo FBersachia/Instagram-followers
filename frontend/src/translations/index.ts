@@ -136,18 +136,25 @@ export interface Translation {
   exFollowers: {
     title: string;
     description: string;
+    listTitle: string;
+    searchPlaceholder: string;
+    loadingText: string;
     filterByDate: string;
     from: string;
     to: string;
     clearFilters: string;
     showing: string;
     filtered: string;
+    unfollowedAt: string;
+    deleteButton: string;
     removeConfirm: string;
     userRemoved: string;
     emptyState: string;
     emptyDescription: string;
     noResults: string;
     noResultsDescription: string;
+    errorLoading: string;
+    errorRemoving: string;
   };
 
   // Login
@@ -303,18 +310,25 @@ const es: Translation = {
   exFollowers: {
     title: 'Ex Seguidores',
     description: 'Usuarios que dejaron de seguirte',
+    listTitle: 'Lista de Ex Seguidores',
+    searchPlaceholder: 'Buscar ex seguidores...',
+    loadingText: 'Cargando ex seguidores...',
     filterByDate: 'Filtrar por Fecha',
     from: 'Desde',
     to: 'Hasta',
     clearFilters: 'Limpiar Filtros',
     showing: 'Mostrando',
     filtered: 'filtrados',
+    unfollowedAt: 'Dejó de seguir',
+    deleteButton: 'Eliminar',
     removeConfirm: '¿Estás seguro de que querés eliminar este usuario?',
     userRemoved: 'Usuario eliminado',
     emptyState: 'No hay ex seguidores',
     emptyDescription: 'Acá aparecerán los usuarios que dejaron de seguirte.',
     noResults: 'No se encontraron resultados',
     noResultsDescription: 'Intentá ajustar los filtros o el término de búsqueda.',
+    errorLoading: 'Error al cargar ex seguidores',
+    errorRemoving: 'Error al eliminar usuario',
   },
 
   login: {
@@ -468,18 +482,25 @@ const en: Translation = {
   exFollowers: {
     title: 'Ex-Followers',
     description: 'Users who stopped following you',
+    listTitle: 'Ex-Followers List',
+    searchPlaceholder: 'Search ex-followers...',
+    loadingText: 'Loading ex-followers...',
     filterByDate: 'Filter by Date',
     from: 'From',
     to: 'To',
     clearFilters: 'Clear Filters',
     showing: 'Showing',
     filtered: 'filtered',
+    unfollowedAt: 'Unfollowed At',
+    deleteButton: 'Delete',
     removeConfirm: 'Are you sure you want to remove this user?',
     userRemoved: 'User removed',
     emptyState: 'No ex-followers',
     emptyDescription: 'Users who stopped following you will appear here.',
     noResults: 'No results found',
     noResultsDescription: 'Try adjusting your filters or search term.',
+    errorLoading: 'Failed to load ex-followers',
+    errorRemoving: 'Failed to remove user',
   },
 
   login: {

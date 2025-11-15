@@ -13,7 +13,7 @@ import {
 import { exFollowersService } from '../services/apiService';
 import { ExFollower } from '../types/api';
 import { useToast } from '../hooks/useToast';
-// import { useLanguage } from '../contexts/LanguageContext'; // TODO: Translate this page
+import { useLanguage } from '../contexts/LanguageContext';
 import { UserX, Trash2, Calendar } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
@@ -22,7 +22,7 @@ type SortField = 'username' | 'unfollowed_at';
 type SortDirection = 'asc' | 'desc';
 
 export const ExFollowersPage = () => {
-  // const { t } = useLanguage(); // TODO: Translate this page
+  const { t } = useLanguage();
   const [exFollowers, setExFollowers] = useState<ExFollower[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,7 +46,7 @@ export const ExFollowersPage = () => {
         setExFollowers(response.data.exFollowers);
       }
     } catch (err: any) {
-      error(err.response?.data?.message || 'Failed to load ex-followers');
+      error(err.response?.data?.message || t.exFollowers.errorLoading);
     } finally {
       setLoading(false);
     }
@@ -126,10 +126,10 @@ export const ExFollowersPage = () => {
       const response = await exFollowersService.remove(username);
       if (response.success) {
         setExFollowers(prev => prev.filter(u => u.username !== username));
-        success(`Removed ${username} from ex-followers`);
+        success(`${username} ${t.exFollowers.userRemoved}`);
       }
     } catch (err: any) {
-      error(err.response?.data?.message || 'Failed to remove user');
+      error(err.response?.data?.message || t.exFollowers.errorRemoving);
     } finally {
       setLoading(false);
     }
@@ -169,7 +169,7 @@ export const ExFollowersPage = () => {
           onClick={() => handleSort('username')}
           className="font-medium hover:text-blue-600"
         >
-          Username
+          {t.common.username}
           <SortIndicator field="username" />
         </button>
       ) as any,
@@ -182,7 +182,7 @@ export const ExFollowersPage = () => {
           onClick={() => handleSort('unfollowed_at')}
           className="font-medium hover:text-blue-600"
         >
-          Unfollowed At
+          {t.exFollowers.unfollowedAt}
           <SortIndicator field="unfollowed_at" />
         </button>
       ) as any,
@@ -192,7 +192,7 @@ export const ExFollowersPage = () => {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t.common.actions,
       render: (row) => (
         <Button
           size="sm"
@@ -200,7 +200,7 @@ export const ExFollowersPage = () => {
           onClick={() => handleDeleteUser(row.username)}
         >
           <Trash2 className="h-3 w-3 mr-1" />
-          Delete
+          {t.exFollowers.deleteButton}
         </Button>
       ),
     },
@@ -212,23 +212,23 @@ export const ExFollowersPage = () => {
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Ex-Followers</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t.exFollowers.title}</h1>
         <p className="mt-2 text-gray-600">
-          Users who used to follow you but unfollowed
+          {t.exFollowers.description}
         </p>
       </div>
 
       {/* Ex-Followers Card */}
       <Card
-        title="Ex-Followers List"
-        subtitle={`${sortedUsers.length} ex-followers${dateFrom || dateTo ? ' (filtered)' : ''}`}
+        title={t.exFollowers.listTitle}
+        subtitle={`${sortedUsers.length} ${t.exFollowers.title.toLowerCase()}${dateFrom || dateTo ? ` (${t.exFollowers.filtered})` : ''}`}
       >
         {/* Actions Bar */}
         <div className="space-y-4 mb-4">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search ex-followers..."
+            placeholder={t.exFollowers.searchPlaceholder}
           />
 
           {/* Date Range Filter */}
@@ -236,7 +236,7 @@ export const ExFollowersPage = () => {
             <div className="flex-1">
               <Input
                 type="date"
-                label="From Date"
+                label={t.exFollowers.from}
                 value={dateFrom}
                 onChange={(e) => {
                   setDateFrom(e.target.value);
@@ -247,7 +247,7 @@ export const ExFollowersPage = () => {
             <div className="flex-1">
               <Input
                 type="date"
-                label="To Date"
+                label={t.exFollowers.to}
                 value={dateTo}
                 onChange={(e) => {
                   setDateTo(e.target.value);
@@ -261,7 +261,7 @@ export const ExFollowersPage = () => {
                   variant="secondary"
                   onClick={clearDateFilters}
                 >
-                  Clear Filters
+                  {t.exFollowers.clearFilters}
                 </Button>
               </div>
             )}
@@ -271,19 +271,19 @@ export const ExFollowersPage = () => {
         {/* Table */}
         {loading ? (
           <div className="py-12">
-            <Loading text="Loading ex-followers..." />
+            <Loading text={t.exFollowers.loadingText} />
           </div>
         ) : exFollowers.length === 0 ? (
           <EmptyState
             icon={<UserX className="h-12 w-12 text-gray-400" />}
-            title="No ex-followers"
-            description="Users moved from non-followers will appear here"
+            title={t.exFollowers.emptyState}
+            description={t.exFollowers.emptyDescription}
           />
         ) : sortedUsers.length === 0 ? (
           <EmptyState
             icon={<Calendar className="h-12 w-12 text-gray-400" />}
-            title="No users found"
-            description="Try adjusting your search query or date filters"
+            title={t.exFollowers.noResults}
+            description={t.exFollowers.noResultsDescription}
           />
         ) : (
           <Table
