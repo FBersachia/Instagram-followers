@@ -13,7 +13,7 @@ import {
 import { nonFollowersService, exFollowersService } from '../services/apiService';
 import { NonFollower } from '../types/api';
 import { useToast } from '../hooks/useToast';
-// import { useLanguage } from '../contexts/LanguageContext'; // TODO: Translate this page
+import { useLanguage } from '../contexts/LanguageContext';
 import { Users, ArrowRight } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
@@ -22,7 +22,7 @@ type SortField = 'username' | 'created_at';
 type SortDirection = 'asc' | 'desc';
 
 export const NonFollowersPage = () => {
-  // const { t } = useLanguage(); // TODO: Translate this page
+  const { t } = useLanguage();
   const [nonFollowers, setNonFollowers] = useState<NonFollower[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,7 +46,7 @@ export const NonFollowersPage = () => {
         setNonFollowers(response.data.nonFollowers);
       }
     } catch (err: any) {
-      error(err.response?.data?.message || 'Failed to load non-followers');
+      error(err.response?.data?.message || t.nonFollowers.errorLoading);
     } finally {
       setLoading(false);
     }
@@ -124,10 +124,10 @@ export const NonFollowersPage = () => {
       const response = await exFollowersService.add(username);
       if (response.success) {
         setNonFollowers(prev => prev.filter(u => u.username !== username));
-        success(`Moved ${username} to ex-followers`);
+        success(`${username} ${t.nonFollowers.movedSuccess}`);
       }
     } catch (err: any) {
-      error(err.response?.data?.message || 'Failed to move user to ex-followers');
+      error(err.response?.data?.message || t.nonFollowers.errorMoving);
     } finally {
       setLoading(false);
     }
@@ -136,7 +136,7 @@ export const NonFollowersPage = () => {
   // Move to ex-followers (bulk)
   const handleMoveToExFollowers = async () => {
     if (selectedUsers.size === 0) {
-      error('No users selected');
+      error(t.nonFollowers.errorNoSelection);
       return;
     }
 
@@ -151,10 +151,10 @@ export const NonFollowersPage = () => {
         setSelectedUsers(new Set());
         setShowMoveModal(false);
         setCurrentPage(1);
-        success(`Moved ${selectedArray.length} users to ex-followers`);
+        success(`${selectedArray.length} ${t.nonFollowers.movedSuccess}`);
       }
     } catch (err: any) {
-      error(err.response?.data?.message || 'Failed to move users to ex-followers');
+      error(err.response?.data?.message || t.nonFollowers.errorMoving);
     } finally {
       setLoading(false);
     }
@@ -206,7 +206,7 @@ export const NonFollowersPage = () => {
           onClick={() => handleSort('username')}
           className="font-medium hover:text-blue-600"
         >
-          Username
+          {t.common.username}
           <SortIndicator field="username" />
         </button>
       ) as any,
@@ -219,7 +219,7 @@ export const NonFollowersPage = () => {
           onClick={() => handleSort('created_at')}
           className="font-medium hover:text-blue-600"
         >
-          Added At
+          {t.nonFollowers.addedAt}
           <SortIndicator field="created_at" />
         </button>
       ) as any,
@@ -229,7 +229,7 @@ export const NonFollowersPage = () => {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t.common.actions,
       render: (row) => (
         <Button
           size="sm"
@@ -237,7 +237,7 @@ export const NonFollowersPage = () => {
           onClick={() => handleDeleteUser(row.username)}
         >
           <ArrowRight className="h-3 w-3 mr-1" />
-          Move to Ex-Followers
+          {t.nonFollowers.moveToExFollowers}
         </Button>
       ),
     },
@@ -249,23 +249,23 @@ export const NonFollowersPage = () => {
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Non-Followers</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t.nonFollowers.title}</h1>
         <p className="mt-2 text-gray-600">
-          Users who don't follow you back (excluding whitelisted users)
+          {t.nonFollowers.description}
         </p>
       </div>
 
       {/* Non-Followers Card */}
       <Card
-        title="Non-Followers List"
-        subtitle={`${sortedUsers.length} non-followers`}
+        title={t.nonFollowers.listTitle}
+        subtitle={`${sortedUsers.length} ${t.nonFollowers.title.toLowerCase()}`}
       >
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search non-followers..."
+            placeholder={t.nonFollowers.searchPlaceholder}
           />
 
           {selectedUsers.size > 0 && (
@@ -275,7 +275,7 @@ export const NonFollowersPage = () => {
               disabled={loading}
             >
               <ArrowRight className="h-4 w-4 mr-2" />
-              Move {selectedUsers.size} to Ex-Followers
+              {t.nonFollowers.moveToExFollowers} ({selectedUsers.size})
             </Button>
           )}
         </div>
@@ -283,19 +283,19 @@ export const NonFollowersPage = () => {
         {/* Table */}
         {loading ? (
           <div className="py-12">
-            <Loading text="Loading non-followers..." />
+            <Loading text={t.nonFollowers.loadingText} />
           </div>
         ) : nonFollowers.length === 0 ? (
           <EmptyState
             icon={<Users className="h-12 w-12 text-gray-400" />}
-            title="No non-followers"
-            description="Upload a JSON file and insert data to see users who don't follow you back"
+            title={t.nonFollowers.emptyState}
+            description={t.nonFollowers.emptyDescription}
           />
         ) : sortedUsers.length === 0 ? (
           <EmptyState
             icon={<Users className="h-12 w-12 text-gray-400" />}
-            title="No users found"
-            description="Try adjusting your search query"
+            title={t.nonFollowers.noResults}
+            description={t.nonFollowers.noResultsDescription}
           />
         ) : (
           <Table
@@ -315,25 +315,25 @@ export const NonFollowersPage = () => {
       <Modal
         isOpen={showMoveModal}
         onClose={() => setShowMoveModal(false)}
-        title="Move to Ex-Followers"
+        title={t.nonFollowers.moveToExFollowers}
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            Are you sure you want to move <strong>{selectedUsers.size}</strong> user(s) to ex-followers?
+            {t.nonFollowers.moveConfirm}
           </p>
           <p className="text-sm text-gray-600">
-            This action will remove them from the non-followers list and add them to the ex-followers list.
+            {t.nonFollowers.moveExplanation}
           </p>
           <div className="flex justify-end space-x-2">
             <Button
               variant="secondary"
               onClick={() => setShowMoveModal(false)}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleMoveToExFollowers} disabled={loading}>
               <ArrowRight className="h-4 w-4 mr-2" />
-              Move to Ex-Followers
+              {t.nonFollowers.moveToExFollowers}
             </Button>
           </div>
         </div>

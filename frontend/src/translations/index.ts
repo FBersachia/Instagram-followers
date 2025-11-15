@@ -115,11 +115,21 @@ export interface Translation {
   nonFollowers: {
     title: string;
     description: string;
+    listTitle: string;
+    searchPlaceholder: string;
+    loadingText: string;
     moveToExFollowers: string;
     moveConfirm: string;
+    moveExplanation: string;
     movedSuccess: string;
     emptyState: string;
     emptyDescription: string;
+    noResults: string;
+    noResultsDescription: string;
+    addedAt: string;
+    errorLoading: string;
+    errorMoving: string;
+    errorNoSelection: string;
   };
 
   // Ex-Followers
@@ -272,12 +282,22 @@ const es: Translation = {
 
   nonFollowers: {
     title: 'No Seguidores',
-    description: 'Usuarios que no te siguen de vuelta',
+    description: 'Usuarios que no te siguen de vuelta (excluye usuarios en lista blanca)',
+    listTitle: 'Lista de No Seguidores',
+    searchPlaceholder: 'Buscar no seguidores...',
+    loadingText: 'Cargando no seguidores...',
     moveToExFollowers: 'Mover a Ex Seguidores',
     moveConfirm: '¿Estás seguro de que querés mover los usuarios seleccionados a ex seguidores?',
+    moveExplanation: 'Esta acción los eliminará de la lista de no seguidores y los agregará a la lista de ex seguidores.',
     movedSuccess: 'usuarios movidos a ex seguidores',
     emptyState: 'No hay no seguidores',
-    emptyDescription: 'Cargá un archivo JSON para empezar a rastrear usuarios que no te siguen.',
+    emptyDescription: 'Cargá un archivo JSON e insertá los datos para ver usuarios que no te siguen de vuelta',
+    noResults: 'No se encontraron usuarios',
+    noResultsDescription: 'Intentá ajustar tu búsqueda',
+    addedAt: 'Agregado',
+    errorLoading: 'Error al cargar no seguidores',
+    errorMoving: 'Error al mover usuario a ex seguidores',
+    errorNoSelection: 'No hay usuarios seleccionados',
   },
 
   exFollowers: {
@@ -427,12 +447,22 @@ const en: Translation = {
 
   nonFollowers: {
     title: 'Non-Followers',
-    description: 'Users who don\'t follow you back',
+    description: 'Users who don\'t follow you back (excluding whitelisted users)',
+    listTitle: 'Non-Followers List',
+    searchPlaceholder: 'Search non-followers...',
+    loadingText: 'Loading non-followers...',
     moveToExFollowers: 'Move to Ex-Followers',
     moveConfirm: 'Are you sure you want to move selected users to ex-followers?',
+    moveExplanation: 'This action will remove them from the non-followers list and add them to the ex-followers list.',
     movedSuccess: 'users moved to ex-followers',
     emptyState: 'No non-followers',
-    emptyDescription: 'Upload a JSON file to start tracking users who don\'t follow you back.',
+    emptyDescription: 'Upload a JSON file and insert data to see users who don\'t follow you back',
+    noResults: 'No users found',
+    noResultsDescription: 'Try adjusting your search query',
+    addedAt: 'Added At',
+    errorLoading: 'Failed to load non-followers',
+    errorMoving: 'Failed to move user to ex-followers',
+    errorNoSelection: 'No users selected',
   },
 
   exFollowers: {
