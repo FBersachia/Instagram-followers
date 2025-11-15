@@ -45,11 +45,22 @@ function convertInsertIgnore(sql: string): string {
     // Only add if not already present
     if (!converted.match(/ON\s+CONFLICT/gi)) {
       converted = converted.trim();
+
+      // Determine the conflict target based on the table
+      let conflictTarget = '(username)'; // default for users table
+      if (converted.includes('non_followers')) {
+        conflictTarget = '(user_id, username)';
+      } else if (converted.includes('ex_followers')) {
+        conflictTarget = '(user_id, username)';
+      } else if (converted.includes('whitelist')) {
+        conflictTarget = '(user_id, username)';
+      }
+
       // Add ON CONFLICT before any trailing semicolon or at the end
       if (converted.endsWith(';')) {
-        converted = converted.slice(0, -1) + ' ON CONFLICT (username) DO NOTHING;';
+        converted = converted.slice(0, -1) + ` ON CONFLICT ${conflictTarget} DO NOTHING;`;
       } else {
-        converted = converted + ' ON CONFLICT (username) DO NOTHING';
+        converted = converted + ` ON CONFLICT ${conflictTarget} DO NOTHING`;
       }
     }
     return converted;

@@ -5,6 +5,9 @@ import { addToWhitelist, getWhitelist, removeFromWhitelist } from './services/wh
 import { addNonFollowers, getNonFollowers } from './services/nonFollowers';
 import { moveToExFollowers, getExFollowers } from './services/exFollowers';
 
+// Default user ID for CLI usage (single-user mode)
+const DEFAULT_USER_ID = 1;
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -67,7 +70,7 @@ async function addToWhitelistMenu() {
   const username = await question('Enter username to add to whitelist: ');
 
   try {
-    await addToWhitelist(username.trim());
+    await addToWhitelist(DEFAULT_USER_ID, username.trim());
     console.log(`✓ Added "${username}" to whitelist`);
   } catch (error: any) {
     console.log(`✗ Error: ${error.message}`);
@@ -76,7 +79,7 @@ async function addToWhitelistMenu() {
 
 async function viewWhitelistMenu() {
   try {
-    const whitelist = await getWhitelist();
+    const whitelist = await getWhitelist(DEFAULT_USER_ID);
 
     if (whitelist.length === 0) {
       console.log('Whitelist is empty');
@@ -96,7 +99,7 @@ async function removeFromWhitelistMenu() {
   const username = await question('Enter username to remove from whitelist: ');
 
   try {
-    await removeFromWhitelist(username.trim());
+    await removeFromWhitelist(DEFAULT_USER_ID, username.trim());
     console.log(`✓ Removed "${username}" from whitelist`);
   } catch (error: any) {
     console.log(`✗ Error: ${error.message}`);
@@ -110,7 +113,7 @@ async function insertDataMenu() {
   }
 
   try {
-    await addNonFollowers(extractedUsernames);
+    await addNonFollowers(DEFAULT_USER_ID, extractedUsernames);
     console.log(`✓ Inserted ${extractedUsernames.length} usernames to non-followers list (excluding whitelisted)`);
   } catch (error: any) {
     console.log(`✗ Error: ${error.message}`);
@@ -119,7 +122,7 @@ async function insertDataMenu() {
 
 async function viewNonFollowersMenu() {
   try {
-    const nonFollowers = await getNonFollowers();
+    const nonFollowers = await getNonFollowers(DEFAULT_USER_ID);
 
     if (nonFollowers.length === 0) {
       console.log('No non-followers found');
@@ -143,7 +146,7 @@ async function moveToExFollowersMenu() {
   const username = await question('Enter username to move to ex-followers: ');
 
   try {
-    await moveToExFollowers(username.trim());
+    await moveToExFollowers(DEFAULT_USER_ID, username.trim());
     console.log(`✓ Moved "${username}" to ex-followers`);
   } catch (error: any) {
     console.log(`✗ Error: ${error.message}`);
@@ -152,7 +155,7 @@ async function moveToExFollowersMenu() {
 
 async function viewExFollowersMenu() {
   try {
-    const exFollowers = await getExFollowers();
+    const exFollowers = await getExFollowers(DEFAULT_USER_ID);
 
     if (exFollowers.length === 0) {
       console.log('No ex-followers found');
