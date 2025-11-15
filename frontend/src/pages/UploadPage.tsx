@@ -13,11 +13,13 @@ import {
 } from '../components';
 import { jsonService, whitelistService, nonFollowersService } from '../services/apiService';
 import { useToast } from '../hooks/useToast';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Upload, UserPlus, Shield } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
 export const UploadPage = () => {
+  const { t } = useLanguage();
   const [extractedUsers, setExtractedUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -204,12 +206,12 @@ export const UploadPage = () => {
     },
     {
       key: 'username',
-      header: 'Username',
+      header: t.common.username,
       render: (row) => <span className="font-medium">{row.username}</span>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t.common.actions,
       render: (row) => (
         <div className="flex space-x-2">
           <Button
@@ -218,7 +220,7 @@ export const UploadPage = () => {
             onClick={() => handleAddSingleToWhitelist(row.username)}
           >
             <Shield className="h-3 w-3 mr-1" />
-            Whitelist
+            {t.upload.addToWhitelist}
           </Button>
         </div>
       ),
@@ -231,9 +233,9 @@ export const UploadPage = () => {
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Upload JSON</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t.upload.title}</h1>
         <p className="mt-2 text-gray-600">
-          Upload your Instagram JSON file to extract usernames
+          {t.upload.title}
         </p>
       </div>
 
@@ -274,15 +276,15 @@ export const UploadPage = () => {
       {extractedUsers.length > 0 && (
         <>
           <Card
-            title="Extracted Users"
-            subtitle={`${filteredUsers.length} users found`}
+            title={t.upload.extractedUsers}
+            subtitle={`${filteredUsers.length} ${t.upload.extractedUsers}`}
           >
             {/* Actions Bar */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
               <SearchBar
                 value={searchQuery}
                 onChange={setSearchQuery}
-                placeholder="Search usernames..."
+                placeholder={t.common.search}
               />
 
               <div className="flex space-x-2">
@@ -293,7 +295,7 @@ export const UploadPage = () => {
                     disabled={loading}
                   >
                     <Shield className="h-4 w-4 mr-2" />
-                    Add {selectedUsers.size} to Whitelist
+                    {t.upload.addToWhitelist} ({selectedUsers.size})
                   </Button>
                 )}
                 <Button
@@ -301,7 +303,7 @@ export const UploadPage = () => {
                   disabled={loading}
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Insert to Non-Followers
+                  {t.upload.insertToNonFollowers}
                 </Button>
               </div>
             </div>
@@ -309,13 +311,13 @@ export const UploadPage = () => {
             {/* Table */}
             {loading ? (
               <div className="py-12">
-                <Loading text="Processing..." />
+                <Loading text={t.common.loading} />
               </div>
             ) : filteredUsers.length === 0 ? (
               <EmptyState
                 icon={<Upload className="h-12 w-12 text-gray-400" />}
-                title="No users found"
-                description="Try adjusting your search query"
+                title={t.upload.noUsers}
+                description={t.upload.noUsers}
               />
             ) : (
               <Table

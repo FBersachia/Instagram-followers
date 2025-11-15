@@ -13,6 +13,7 @@ import {
 import { nonFollowersService, exFollowersService } from '../services/apiService';
 import { NonFollower } from '../types/api';
 import { useToast } from '../hooks/useToast';
+// import { useLanguage } from '../contexts/LanguageContext'; // TODO: Translate this page
 import { Users, ArrowRight } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
@@ -21,6 +22,7 @@ type SortField = 'username' | 'created_at';
 type SortDirection = 'asc' | 'desc';
 
 export const NonFollowersPage = () => {
+  // const { t } = useLanguage(); // TODO: Translate this page
   const [nonFollowers, setNonFollowers] = useState<NonFollower[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

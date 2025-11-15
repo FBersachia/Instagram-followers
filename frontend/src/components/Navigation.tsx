@@ -11,20 +11,22 @@ import {
   LogOut
 } from 'lucide-react';
 import { CopyScriptButton } from './CopyScriptButton';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface NavLink {
   to: string;
-  label: string;
+  labelKey: keyof typeof import('../translations').translations.es.nav;
   icon: React.ReactNode;
 }
 
 const navLinks: NavLink[] = [
-  { to: '/', label: 'Dashboard', icon: <Home className="h-5 w-5" /> },
-  { to: '/upload', label: 'Upload JSON', icon: <Upload className="h-5 w-5" /> },
-  { to: '/whitelist', label: 'Whitelist', icon: <Shield className="h-5 w-5" /> },
-  { to: '/non-followers', label: 'Non-Followers', icon: <UserX className="h-5 w-5" /> },
-  { to: '/ex-followers', label: 'Ex-Followers', icon: <UserMinus className="h-5 w-5" /> }
+  { to: '/', labelKey: 'dashboard', icon: <Home className="h-5 w-5" /> },
+  { to: '/upload', labelKey: 'upload', icon: <Upload className="h-5 w-5" /> },
+  { to: '/whitelist', labelKey: 'whitelist', icon: <Shield className="h-5 w-5" /> },
+  { to: '/non-followers', labelKey: 'nonFollowers', icon: <UserX className="h-5 w-5" /> },
+  { to: '/ex-followers', labelKey: 'exFollowers', icon: <UserMinus className="h-5 w-5" /> }
 ];
 
 export const Navigation = () => {
@@ -33,6 +35,7 @@ export const Navigation = () => {
   const navigate = useNavigate();
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -101,10 +104,11 @@ export const Navigation = () => {
                   `}
                 >
                   {link.icon}
-                  <span className="ml-2">{link.label}</span>
+                  <span className="ml-2">{t.nav[link.labelKey]}</span>
                 </Link>
               ))}
               <CopyScriptButton />
+              <LanguageSwitcher />
               <div className="ml-2 pl-2 border-l border-gray-300 flex items-center space-x-2">
                 {user && (
                   <span className="text-sm text-gray-600 px-2">
@@ -114,10 +118,10 @@ export const Navigation = () => {
                 <button
                   onClick={handleLogout}
                   className="inline-flex items-center px-3 lg:px-4 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-red-50 hover:text-red-700"
-                  title="Logout"
+                  title={t.nav.logout}
                 >
                   <LogOut className="h-5 w-5" />
-                  <span className="ml-2">Logout</span>
+                  <span className="ml-2">{t.nav.logout}</span>
                 </button>
               </div>
             </div>
@@ -177,11 +181,12 @@ export const Navigation = () => {
               `}
             >
               {link.icon}
-              <span className="ml-3">{link.label}</span>
+              <span className="ml-3">{t.nav[link.labelKey]}</span>
             </Link>
           ))}
-          <div className="px-4 pt-2">
+          <div className="px-4 pt-2 space-y-2">
             <CopyScriptButton />
+            <LanguageSwitcher />
           </div>
           <div className="border-t border-gray-200 mt-2 pt-2">
             {user && (
@@ -194,7 +199,7 @@ export const Navigation = () => {
               className="flex items-center w-full px-4 py-3 text-base font-medium rounded-lg transition-colors text-gray-700 hover:bg-red-50 hover:text-red-700 active:bg-red-100 min-h-[44px] touch-manipulation"
             >
               <LogOut className="h-5 w-5" />
-              <span className="ml-3">Logout</span>
+              <span className="ml-3">{t.nav.logout}</span>
             </button>
           </div>
         </div>

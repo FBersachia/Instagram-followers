@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Button, Input, Card } from '../components';
+import { useLanguage } from '../contexts/LanguageContext';
+import { Button, Input, Card, LanguageSwitcher } from '../components';
 import { LogIn } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { t } = useLanguage();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -33,15 +35,18 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
             <LogIn className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Instagram Follower Tracker
+            {t.login.title}
           </h1>
-          <p className="text-gray-600">Sign in to access your account</p>
+          <p className="text-gray-600">{t.login.subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -52,21 +57,21 @@ const LoginPage: React.FC = () => {
           )}
 
           <Input
-            label="Username"
+            label={t.login.username}
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your username"
+            placeholder={t.login.username}
             required
             disabled={isLoading}
           />
 
           <Input
-            label="Password"
+            label={t.login.password}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
+            placeholder={t.login.password}
             required
             disabled={isLoading}
           />
@@ -78,7 +83,7 @@ const LoginPage: React.FC = () => {
             disabled={isLoading || !username || !password}
           >
             <LogIn className="w-4 h-4 mr-2" />
-            Sign In
+            {isLoading ? t.login.loggingIn : t.login.loginButton}
           </Button>
         </form>
       </Card>

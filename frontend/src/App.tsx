@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout, ProtectedRoute } from './components';
 import { AuthProvider } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { DashboardPage } from './pages/DashboardPage';
 import { UploadPage } from './pages/UploadPage';
 import { WhitelistPage } from './pages/WhitelistPage';
@@ -19,9 +20,10 @@ const StatsPage = () => (
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
+    <LanguageProvider>
+      <Router>
+        <AuthProvider>
+          <Routes>
           {/* Public route */}
           <Route path="/login" element={<LoginPage />} />
 
@@ -89,9 +91,10 @@ function App() {
 
           {/* Catch all - redirect to dashboard */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
-    </Router>
+          </Routes>
+        </AuthProvider>
+      </Router>
+    </LanguageProvider>
   );
 }
 

@@ -6,8 +6,10 @@ import { Users, UserX, UserMinus, Shield, TrendingUp, Download } from 'lucide-re
 import { format } from 'date-fns';
 import { useToast } from '../hooks/useToast';
 import { exportToCSV, exportToJSON } from '../utils/exportData';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const DashboardPage = () => {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [followerCount, setFollowerCount] = useState('');
@@ -121,7 +123,7 @@ export const DashboardPage = () => {
   };
 
   if (loading) {
-    return <Loading fullScreen text="Loading dashboard..." />;
+    return <Loading fullScreen text={t.common.loading} />;
   }
 
   return (
@@ -130,22 +132,22 @@ export const DashboardPage = () => {
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t.dashboard.title}</h1>
         <p className="mt-2 text-gray-600">
-          Overview of your Instagram follower tracking
+          {t.dashboard.welcome}
         </p>
       </div>
 
       {/* Record Follower Count */}
-      <Card title="Record Follower Count" subtitle="Track your follower growth over time">
+      <Card title={t.dashboard.followerCount.title} subtitle={t.dashboard.followerCount.evolution}>
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <Input
               type="number"
-              label="Current Follower Count"
+              label={t.dashboard.followerCount.current}
               value={followerCount}
               onChange={(e) => setFollowerCount(e.target.value)}
-              placeholder="Enter your current follower count"
+              placeholder={t.dashboard.followerCount.current}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   handleSubmitCount();
@@ -156,7 +158,7 @@ export const DashboardPage = () => {
           <div className="flex items-end">
             <Button onClick={handleSubmitCount} disabled={submitting}>
               <TrendingUp className="h-4 w-4 mr-2" />
-              Record Count
+              {t.dashboard.followerCount.record}
             </Button>
           </div>
         </div>
@@ -164,7 +166,7 @@ export const DashboardPage = () => {
         {/* Recent Counts */}
         {recentCounts.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Recent Records</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">{t.dashboard.followerCount.history}</h3>
             <div className="space-y-2">
               {recentCounts.slice(0, 5).map((record) => (
                 <div
@@ -185,24 +187,24 @@ export const DashboardPage = () => {
       </Card>
 
       {/* Export Statistics */}
-      <Card title="Export Statistics" subtitle="Download your data in CSV or JSON format">
+      <Card title={t.dashboard.exportStats} subtitle={t.dashboard.exportStats}>
         <div className="flex flex-col sm:flex-row gap-4 items-end">
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Export Format
+              {t.common.export}
             </label>
             <select
               value={exportFormat}
               onChange={(e) => setExportFormat(e.target.value as 'csv' | 'json')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="csv">CSV (Excel Compatible)</option>
-              <option value="json">JSON</option>
+              <option value="csv">{t.dashboard.exportCSV}</option>
+              <option value="json">{t.dashboard.exportJSON}</option>
             </select>
           </div>
           <Button onClick={handleExport} disabled={!stats}>
             <Download className="h-4 w-4 mr-2" />
-            Export Data
+            {t.common.export}
           </Button>
         </div>
       </Card>
@@ -215,7 +217,7 @@ export const DashboardPage = () => {
               <Shield className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Whitelist</p>
+              <p className="text-sm font-medium text-gray-600">{t.dashboard.stats.whitelist}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats?.whitelist.count || 0}
               </p>
@@ -229,7 +231,7 @@ export const DashboardPage = () => {
               <UserX className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Non-Followers</p>
+              <p className="text-sm font-medium text-gray-600">{t.dashboard.stats.nonFollowers}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats?.nonFollowers.count || 0}
               </p>
@@ -243,7 +245,7 @@ export const DashboardPage = () => {
               <UserMinus className="h-6 w-6 text-red-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Ex-Followers</p>
+              <p className="text-sm font-medium text-gray-600">{t.dashboard.stats.exFollowers}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats?.exFollowers.count || 0}
               </p>
@@ -257,7 +259,7 @@ export const DashboardPage = () => {
               <Users className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Tracked</p>
+              <p className="text-sm font-medium text-gray-600">{t.dashboard.stats.totalTracked}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats?.totalTracked || 0}
               </p>
@@ -269,7 +271,7 @@ export const DashboardPage = () => {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Distribution Chart */}
-        <Card title="Distribution" subtitle="Breakdown of tracked users">
+        <Card title={t.dashboard.followerCount.distribution} subtitle={t.dashboard.followerCount.distribution}>
           <DistributionChart
             whitelist={stats?.whitelist.count || 0}
             nonFollowers={stats?.nonFollowers.count || 0}
@@ -278,7 +280,7 @@ export const DashboardPage = () => {
         </Card>
 
         {/* Follower Evolution Chart */}
-        <Card title="Follower Evolution" subtitle="Track your follower growth over time">
+        <Card title={t.dashboard.followerCount.evolution} subtitle={t.dashboard.followerCount.evolution}>
           <div className="mb-4">
             <DateRangeSelector
               startDate={startDate}
@@ -294,7 +296,7 @@ export const DashboardPage = () => {
 
       {/* Recent Ex-Followers */}
       {stats && stats.exFollowers.recent.length > 0 && (
-        <Card title="Recent Ex-Followers" subtitle="Users who recently unfollowed">
+        <Card title={t.dashboard.recentExFollowers} subtitle={t.dashboard.recentExFollowers}>
           <div className="space-y-3">
             {stats.exFollowers.recent.map((exFollower) => (
               <div

@@ -13,6 +13,7 @@ import {
 import { exFollowersService } from '../services/apiService';
 import { ExFollower } from '../types/api';
 import { useToast } from '../hooks/useToast';
+// import { useLanguage } from '../contexts/LanguageContext'; // TODO: Translate this page
 import { UserX, Trash2, Calendar } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
@@ -21,6 +22,7 @@ type SortField = 'username' | 'unfollowed_at';
 type SortDirection = 'asc' | 'desc';
 
 export const ExFollowersPage = () => {
+  // const { t } = useLanguage(); // TODO: Translate this page
   const [exFollowers, setExFollowers] = useState<ExFollower[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

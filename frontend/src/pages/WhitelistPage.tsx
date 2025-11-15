@@ -13,11 +13,13 @@ import {
 } from '../components';
 import { whitelistService } from '../services/apiService';
 import { useToast } from '../hooks/useToast';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Shield, Trash2, UserPlus } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
 export const WhitelistPage = () => {
+  const { t } = useLanguage();
   const [whitelistedUsers, setWhitelistedUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,7 +28,7 @@ export const WhitelistPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
-  const { toasts, success, error, closeToast } = useToast();
+  const { toasts, success, error, closeToast} = useToast();
 
   // Load whitelist on mount
   useEffect(() => {
@@ -118,12 +120,12 @@ export const WhitelistPage = () => {
   const columns: Column<{ username: string }>[] = [
     {
       key: 'username',
-      header: 'Username',
+      header: t.common.username,
       render: (row) => <span className="font-medium">{row.username}</span>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t.common.actions,
       render: (row) => (
         <Button
           size="sm"
@@ -131,7 +133,7 @@ export const WhitelistPage = () => {
           onClick={() => confirmDelete(row.username)}
         >
           <Trash2 className="h-3 w-3 mr-1" />
-          Remove
+          {t.common.remove}
         </Button>
       ),
     },
@@ -144,51 +146,51 @@ export const WhitelistPage = () => {
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Whitelist</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t.whitelist.title}</h1>
           <p className="mt-2 text-gray-600">
-            Manage users that should never appear in non-followers list
+            {t.whitelist.description}
           </p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
-          Add User
+          {t.whitelist.addUser}
         </Button>
       </div>
 
       {/* Whitelist Card */}
       <Card
-        title="Whitelisted Users"
-        subtitle={`${filteredUsers.length} users whitelisted`}
+        title={t.whitelist.title}
+        subtitle={`${filteredUsers.length} ${t.whitelist.title}`}
       >
         {/* Search Bar */}
         <div className="mb-4">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search whitelisted users..."
+            placeholder={t.common.search}
           />
         </div>
 
         {/* Table */}
         {loading ? (
           <div className="py-12">
-            <Loading text="Loading whitelist..." />
+            <Loading text={t.common.loading} />
           </div>
         ) : whitelistedUsers.length === 0 ? (
           <EmptyState
             icon={<Shield className="h-12 w-12 text-gray-400" />}
-            title="No whitelisted users"
-            description="Add users to whitelist to exclude them from non-followers analysis"
+            title={t.whitelist.emptyState}
+            description={t.whitelist.emptyDescription}
             action={{
-              label: "Add First User",
+              label: t.whitelist.addUser,
               onClick: () => setShowAddModal(true)
             }}
           />
         ) : filteredUsers.length === 0 ? (
           <EmptyState
             icon={<Shield className="h-12 w-12 text-gray-400" />}
-            title="No users found"
-            description="Try adjusting your search query"
+            title={t.whitelist.emptyState}
+            description={t.whitelist.emptyDescription}
           />
         ) : (
           <Table
@@ -211,14 +213,14 @@ export const WhitelistPage = () => {
           setShowAddModal(false);
           setNewUsername('');
         }}
-        title="Add User to Whitelist"
+        title={t.whitelist.addUser}
       >
         <div className="space-y-4">
           <Input
-            label="Username"
+            label={t.common.username}
             value={newUsername}
             onChange={(e) => setNewUsername(e.target.value)}
-            placeholder="Enter username"
+            placeholder={t.whitelist.enterUsername}
             onKeyPress={(e) => {
               if (e.key === 'Enter') {
                 handleAddUser();
@@ -233,10 +235,10 @@ export const WhitelistPage = () => {
                 setNewUsername('');
               }}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleAddUser} disabled={loading}>
-              Add to Whitelist
+              {t.whitelist.addButton}
             </Button>
           </div>
         </div>
@@ -249,11 +251,11 @@ export const WhitelistPage = () => {
           setShowDeleteModal(false);
           setUserToDelete(null);
         }}
-        title="Confirm Removal"
+        title={t.common.confirm}
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            Are you sure you want to remove <strong>{userToDelete}</strong> from the whitelist?
+            {t.whitelist.removeConfirm}
           </p>
           <div className="flex justify-end space-x-2">
             <Button
@@ -263,10 +265,10 @@ export const WhitelistPage = () => {
                 setUserToDelete(null);
               }}
             >
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button variant="danger" onClick={handleDeleteUser} disabled={loading}>
-              Remove
+              {t.common.remove}
             </Button>
           </div>
         </div>

@@ -41,6 +41,8 @@ export { InflatrackBanner } from './InflatrackBanner';
 
 export { CopyScriptButton } from './CopyScriptButton';
 
+export { LanguageSwitcher } from './LanguageSwitcher';
+
 // Auth Components
 export { default as ProtectedRoute } from './ProtectedRoute';
 
