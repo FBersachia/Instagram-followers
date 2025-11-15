@@ -1,6 +1,7 @@
 import { useRef, useState, DragEvent } from 'react';
 import { Upload, File, X } from 'lucide-react';
 import { Button } from './Button';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export interface FileUploadProps {
   onFileSelect: (file: File) => void;
@@ -19,6 +20,7 @@ export const FileUpload = ({
   helperText,
   error
 }: FileUploadProps) => {
+  const { t } = useLanguage();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [fileError, setFileError] = useState<string>('');
@@ -29,14 +31,14 @@ export const FileUpload = ({
 
     // Check file type
     if (accept && !file.name.endsWith(accept)) {
-      setFileError(`Please select a ${accept} file`);
+      setFileError(`${t.upload.fileTypeError} ${accept}`);
       return false;
     }
 
     // Check file size
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      setFileError(`File size must be less than ${maxSizeMB}MB`);
+      setFileError(`${t.upload.fileSizeError} ${maxSizeMB}MB`);
       return false;
     }
 
@@ -119,11 +121,11 @@ export const FileUpload = ({
                 variant="secondary"
                 onClick={() => inputRef.current?.click()}
               >
-                Choose File
+                {t.upload.chooseFile}
               </Button>
             </div>
             <p className="mt-2 text-sm text-gray-500">
-              or drag and drop
+              {t.upload.orDragDrop}
             </p>
             {helperText && (
               <p className="mt-1 text-xs text-gray-400">{helperText}</p>
